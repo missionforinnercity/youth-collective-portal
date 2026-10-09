@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Share your voice — Youth Collective</title>
+</head>
+<body>
+  <header>
+    <h1>Youth Collective</h1>
+    <p>Inner City youth voices, spaces, and opportunities</p>
+    <nav aria-label="Main navigation">
+      <a href="/survey.html" aria-current="page">Share your voice</a> |
+      <a href="/spaces.html">Find a space</a> |
+      <a href="/insights.html">Community insights</a> |
+      <a href="/join.html">Join Youth Collective</a>
+    </nav>
+  </header>
+  <main>
+    <h2>Tell us about your Inner City</h2>
+    <p>One question at a time. Your answers are anonymous. Please leave out your name, phone number, address, and other identifying details.</p>
+    <form id="survey-form">
+      <p id="survey-progress"></p>
+      <label id="survey-question" for="survey-answer"></label>
+      <p><textarea id="survey-answer" rows="3" maxlength="1000"></textarea></p>
+      <p><button type="button" id="survey-back">Back</button> <button type="button" id="survey-next">Next</button> <button type="submit" id="survey-submit" hidden>Send my answers</button></p>
+      <label><input type="checkbox" id="survey-consent" required> I agree to share these anonymous answers for community insights.</label>
+    </form>
+    <p id="survey-message" role="status"></p>
+  </main>
+  <script src="/app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Join Youth Collective</title>
+</head>
+<body>
+  <header>
+    <h1>Youth Collective</h1>
+    <p>Inner City youth voices, spaces, and opportunities</p>
+    <nav aria-label="Main navigation">
+      <a href="/survey.html">Share your voice</a> |
+      <a href="/spaces.html">Find a space</a> |
+      <a href="/insights.html">Community insights</a> |
+      <a href="/join.html" aria-current="page">Join Youth Collective</a>
+    </nav>
+  </header>
+  <main>
+    <h2>Join Youth Collective</h2>
+    <p>Leave your email and phone number if you’d like to hear from us. This information is kept separate from anonymous survey answers.</p>
+    <form id="member-form">
+      <p><label for="member-email">Email address</label><br><input id="member-email" name="email" type="email" autocomplete="email" maxlength="254" required></p>
+      <p><label for="member-phone">Phone number</label><br><input id="member-phone" name="phone" type="tel" autocomplete="tel" maxlength="40" required></p>
+      <label><input id="member-consent" type="checkbox" required> Youth Collective may contact me using these details.</label>
+      <p><button type="submit">Sign me up</button></p>
+    </form>
+    <p id="member-message" role="status"></p>
+  </main>
+  <script src="/app.js" defer></script>
+</body>
+</html>

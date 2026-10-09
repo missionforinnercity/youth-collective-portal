@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Find a space — Youth Collective</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+</head>
+<body>
+  <header>
+    <h1>Youth Collective</h1>
+    <p id="city-name">Inner City youth voices, spaces, and opportunities</p>
+    <nav aria-label="Main navigation">
+      <a href="/survey.html">Share your voice</a> |
+      <a href="/spaces.html" aria-current="page">Find a space</a> |
+      <a href="/insights.html">Community insights</a> |
+      <a href="/join.html">Join Youth Collective</a>
+    </nav>
+  </header>
+  <main>
+    <h2>Third spaces in the Inner City</h2>
+    <p>Find places where young people can spend time, study, and connect.</p>
+    <div id="map" aria-label="Map of third spaces" style="height: 420px; max-width: 900px;"></div>
+    <p id="map-message" role="status"></p>
+  </main>
+  <footer><p>© OpenStreetMap contributors, © CARTO</p></footer>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="/app.js" defer></script>
+</body>
+</html>

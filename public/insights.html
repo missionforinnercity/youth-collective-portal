@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Community insights — Youth Collective</title>
+</head>
+<body>
+  <header>
+    <h1>Youth Collective</h1>
+    <p>Inner City youth voices, spaces, and opportunities</p>
+    <nav aria-label="Main navigation">
+      <a href="/survey.html">Share your voice</a> |
+      <a href="/spaces.html">Find a space</a> |
+      <a href="/insights.html" aria-current="page">Community insights</a> |
+      <a href="/join.html">Join Youth Collective</a>
+    </nav>
+  </header>
+  <main>
+    <h2>What the community is saying</h2>
+    <p id="response-count">Loading responses…</p>
+    <p>Word counts show themes across answers. Individual answers are not shown.</p>
+    <div id="question-insights"></div>
+    <h3>Community summary</h3>
+    <button id="summary-button" type="button">Create a Gemini summary</button>
+    <p id="summary-status" role="status"></p>
+    <div id="summary-text"></div>
+  </main>
+  <script src="/app.js" defer></script>
+</body>
+</html>

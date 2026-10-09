@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin portal — Youth Collective</title>
+</head>
+<body>
+  <header>
+    <h1>Youth Collective Admin</h1>
+    <nav aria-label="Main navigation">
+      <a href="/">Public home</a> |
+      <a href="/survey.html">Survey</a> |
+      <a href="/spaces.html">Map</a> |
+      <a href="/insights.html">Insights</a>
+    </nav>
+  </header>
+  <main>
+    <section id="login-section">
+      <h2>Administrator sign in</h2>
+      <p id="login-help">Sign in to view responses and manage the survey and map.</p>
+      <form id="login-form">
+        <p><label for="admin-password">Admin password</label><br><input id="admin-password" type="password" autocomplete="current-password" required></p>
+        <button type="submit">Sign in</button>
+      </form>
+      <p id="login-message" role="status"></p>
+    </section>
+
+    <div id="admin-workspace" hidden>
+      <p><button id="logout-button" type="button">Sign out</button></p>
+
+      <section id="responses-section">
+        <h2>Survey responses</h2>
+        <p id="response-total"></p>
+        <div id="response-list"></div>
+      </section>
+
+      <section id="question-section">
+        <h2>Edit survey questions</h2>
+        <p>Change wording, reorder, add, or remove questions. Past responses keep their original question text where available.</p>
+        <div id="question-list"></div>
+        <p><button id="add-question" type="button">Add a question</button> <button id="save-questions" type="button">Save questions</button></p>
+        <p id="question-message" role="status"></p>
+      </section>
+
+      <section id="locations-section">
+        <h2>Manage third spaces</h2>
+        <h3>Add a location</h3>
+        <form id="location-form">
+          <p><label for="location-name">Place name</label><br><input id="location-name" name="name" maxlength="120" required></p>
+          <p><label for="location-address">Address or area</label><br><input id="location-address" name="address" maxlength="240" required></p>
+          <p><label for="location-description">What can young people do there?</label><br><textarea id="location-description" name="description" maxlength="500" rows="3"></textarea></p>
+          <p><label for="location-cost">Cost information</label><br><input id="location-cost" name="cost" maxlength="120"></p>
+          <p><label for="location-latitude">Latitude</label><br><input id="location-latitude" name="latitude" type="number" step="any" min="-90" max="90" required></p>
+          <p><label for="location-longitude">Longitude</label><br><input id="location-longitude" name="longitude" type="number" step="any" min="-180" max="180" required></p>
+          <button type="submit">Add location</button>
+        </form>
+        <p id="location-message" role="status"></p>
+        <h3>Current locations</h3>
+        <div id="location-list"></div>
+      </section>
+    </div>
+  </main>
+  <script src="/admin.js" defer></script>
+</body>
+</html>
