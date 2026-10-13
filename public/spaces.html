@@ -3,27 +3,79 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Find a space — Youth Collective</title>
+  <meta name="theme-color" content="#c7eaf7">
+  <meta name="description" content="Explore third spaces in Cape Town’s inner city and find a place to meet people, work on ideas, or try something new.">
+  <title>Third Spaces — Youth Collective</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 </head>
-<body>
-  <header>
-    <h1>Youth Collective</h1>
-    <p id="city-name">Inner City youth voices, spaces, and opportunities</p>
-    <nav aria-label="Main navigation">
-      <a href="/survey.html">Share your voice</a> |
-      <a href="/spaces.html" aria-current="page">Find a space</a> |
-      <a href="/insights.html">Community insights</a> |
-      <a href="/join.html">Join Youth Collective</a>
+<body class="home-page spaces-page">
+  <header class="site-header">
+    <a class="brand-lockup" href="/" aria-label="Youth Collective home">
+      <img src="/branding/Youth%20Collective%20wordmark%20purple.svg" alt="Youth Collective">
+    </a>
+    <button class="menu-toggle" aria-expanded="false" aria-controls="main-menu" type="button">
+      <span></span><span></span><span class="sr-only">Menu</span>
+    </button>
+    <nav class="main-menu" id="main-menu" aria-label="Main navigation">
+      <a href="#third-spaces" aria-current="page">Third spaces</a>
+      <a href="/about.html">About</a>
+      <a href="/survey.html">Share your voice</a>
+      <a class="button button-small" href="/join.html">Join us <span aria-hidden="true">↗</span></a>
     </nav>
   </header>
+
   <main>
-    <h2>Third spaces in the Inner City</h2>
-    <p>Find places where young people can spend time, study, and connect.</p>
-    <div id="map" aria-label="Map of third spaces" style="height: 420px; max-width: 900px;"></div>
-    <p id="map-message" role="status"></p>
+    <section class="third-spaces section-wrap spaces-catalog" id="third-spaces">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">01 / Explore your city</span>
+          <h1>Find your<br>somewhere<span class="heading-dot">.</span></h1>
+        </div>
+        <p>A free space beyond home, work, or school where you can meet people, work on your ideas, start a business, or try something new, with no obligation to buy anything.</p>
+      </div>
+
+      <div class="space-explorer reveal">
+        <div class="space-list-panel">
+          <div class="carousel-heading">
+            <span class="eyebrow">Choose a third space</span>
+            <div class="carousel-controls">
+              <button type="button" id="space-prev" aria-label="Previous space">←</button>
+              <button type="button" id="space-next" aria-label="Next space">→</button>
+            </div>
+          </div>
+          <div class="space-carousel" id="space-carousel" aria-live="polite">
+            <div class="space-empty">Loading third spaces…</div>
+          </div>
+          <div class="carousel-foot">
+            <span id="space-count">Spaces in the Inner City</span>
+            <span>Tap a pin to explore</span>
+          </div>
+        </div>
+        <div class="map-panel">
+          <div class="map-caption">
+            <span class="map-pin" aria-hidden="true"></span>
+            <span id="home-map-label">A map of the Inner City</span>
+          </div>
+          <div id="home-map" class="home-map" aria-label="Map highlighting the selected third space"></div>
+          <div class="map-legend">
+            <span>Pin numbers match the cards</span>
+            <span>Click a pin to select a space</span>
+          </div>
+          <div class="map-credit">© OpenStreetMap contributors</div>
+        </div>
+      </div>
+    </section>
   </main>
-  <footer><p>© OpenStreetMap contributors, © CARTO</p></footer>
+
+  <footer class="site-footer">
+    <a href="/" class="footer-brand" aria-label="Youth Collective home">
+      <img src="/branding/Youth%20Collective%20wordmark%20cream.svg" alt="Youth Collective">
+    </a>
+    <a href="/about.html">About Youth Collective ↗</a>
+  </footer>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="/app.js" defer></script>
 </body>

@@ -33,6 +33,11 @@ function renderResponses(data) {
     const heading = document.createElement("h3");
     heading.textContent = response.createdAt ? new Date(response.createdAt).toLocaleString() : "Response";
     article.append(heading);
+    if (response.respondent) {
+      const respondent = document.createElement("p");
+      respondent.textContent = `${response.respondent.firstName} ${response.respondent.lastName} · ${response.respondent.thirdSpace}`;
+      article.append(respondent);
+    }
     for (const entry of response.answers) {
       const question = document.createElement("p");
       const label = document.createElement("strong");

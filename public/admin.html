@@ -3,21 +3,26 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Admin portal — Youth Collective</title>
+  <meta name="theme-color" content="#c7eaf7">
+  <meta name="description" content="Manage Youth Collective survey responses, questions, and third-space locations.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/styles.css">
+  <title>Admin — Youth Collective</title>
 </head>
-<body>
-  <header>
-    <h1>Youth Collective Admin</h1>
-    <nav aria-label="Main navigation">
-      <a href="/">Public home</a> |
-      <a href="/survey.html">Survey</a> |
-      <a href="/spaces.html">Map</a> |
-      <a href="/insights.html">Insights</a>
+<body class="admin-page">
+  <header class="admin-header">
+    <a class="brand-lockup" href="/" aria-label="Youth Collective home"><img src="/branding/Youth%20Collective%20wordmark%20purple.svg" alt="Youth Collective"></a>
+    <h1>Admin portal</h1>
+    <nav class="admin-nav" aria-label="Public site navigation">
+      <a href="/">Public home</a>
+      <a href="/survey.html">Survey</a>
+      <a href="/spaces.html">Map</a>
+      <a href="/about.html">About</a>
     </nav>
   </header>
   <main>
     <section id="login-section">
-      <h2>Administrator sign in</h2>
+      <h2>Admin sign in</h2>
       <p id="login-help">Sign in to view responses and manage the survey and map.</p>
       <form id="login-form">
         <p><label for="admin-password">Admin password</label><br><input id="admin-password" type="password" autocomplete="current-password" required></p>

@@ -1,20 +1,179 @@
 async function request(url, options = {}) {
-  const response = await fetch(url, { ...options, headers: { "Content-Type": "application/json", ...(options.headers || {}) } });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error || "Something went wrong. Please try again.");
-  return data;
+  const isRead = (options.method || "GET").toUpperCase() === "GET";
+  const delays = [750, 1500, 3000, 5000, 8000, 8000];
+  for (let attempt = 0; ; attempt++) {
+    let response;
+    try {
+      response = await fetch(url, { ...options, headers: { "Content-Type": "application/json", ...(options.headers || {}) } });
+    } catch (error) {
+      if (!isRead || attempt >= delays.length) throw error;
+      await new Promise((resolve) => window.setTimeout(resolve, delays[attempt]));
+      continue;
+    }
+    let data = {};
+    try { data = await response.json(); } catch { /* Keep a useful fallback for empty or non-JSON server errors. */ }
+    if (response.ok) return data;
+    if (isRead && response.status === 503 && attempt < delays.length) {
+      await new Promise((resolve) => window.setTimeout(resolve, delays[attempt]));
+      continue;
+    }
+    throw new Error(data.error || "Something went wrong. Please try again.");
+  }
 }
 
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
 }
 
+const menuToggle = document.querySelector(".menu-toggle");
+menuToggle?.addEventListener("click", () => {
+  const expanded = menuToggle.getAttribute("aria-expanded") === "true";
+  menuToggle.setAttribute("aria-expanded", String(!expanded));
+  document.querySelector("#main-menu")?.classList.toggle("is-open", !expanded);
+});
+
+const rotatingWord = document.querySelector("#rotating-word");
+if (rotatingWord && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  const words = ["people.", "places.", "opportunities."];
+  let wordIndex = 0;
+  window.setInterval(() => {
+    wordIndex = (wordIndex + 1) % words.length;
+    rotatingWord.textContent = words[wordIndex];
+    rotatingWord.animate(
+      [
+        { opacity: 0, transform: "translateY(.16em)" },
+        { opacity: 1, transform: "translateY(0)" },
+      ],
+      { duration: 750, easing: "cubic-bezier(.2,.75,.2,1)" },
+    );
+  }, 3000);
+}
+
+const carousel = document.querySelector("#space-carousel");
+if (carousel) {
+  let spaces = [];
+  let activeIndex = 0;
+  let homeMap;
+  let markers;
+  let mapMarkers = [];
+  const label = document.querySelector("#home-map-label");
+  const count = document.querySelector("#space-count");
+
+  function showSpace(index, { fromMap = false, scrollCard = true } = {}) {
+    if (!spaces.length) return;
+    activeIndex = (index + spaces.length) % spaces.length;
+    const space = spaces[activeIndex];
+    carousel.querySelectorAll(".space-card").forEach((card, cardIndex) => card.classList.toggle("is-selected", cardIndex === activeIndex));
+    if (scrollCard) carousel.querySelector(`[data-space-index="${activeIndex}"]`)?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    label.textContent = `${String(activeIndex + 1).padStart(2, "0")} · ${space.name}`;
+    if (homeMap && Number.isFinite(Number(space.latitude)) && Number.isFinite(Number(space.longitude))) {
+      const position = [Number(space.latitude), Number(space.longitude)];
+      mapMarkers.forEach((marker, markerIndex) => {
+        const icon = marker.getElement();
+        icon?.classList.toggle("is-active", markerIndex === activeIndex);
+      });
+      if (!fromMap) {
+        homeMap.flyTo(position, Math.max(homeMap.getZoom(), 15), { duration: 0.7 });
+        mapMarkers[activeIndex]?.openPopup();
+      }
+    }
+  }
+
+  function renderSpaces() {
+    carousel.replaceChildren();
+    count.textContent = `${spaces.length} ${spaces.length === 1 ? "space" : "spaces"} in the Inner City`;
+    if (!spaces.length) {
+      const empty = document.createElement("div");
+      empty.className = "space-empty";
+      empty.textContent = "No third spaces have been added yet.";
+      carousel.append(empty);
+      return;
+    }
+    spaces.forEach((space, index) => {
+      const card = document.createElement("article");
+      card.className = `space-card${index === 0 ? " is-selected" : ""}`;
+      card.dataset.spaceIndex = String(index);
+      card.tabIndex = 0;
+      card.setAttribute("role", "button");
+      card.setAttribute("aria-label", `Show ${space.name} on the map`);
+      const number = String(index + 1).padStart(2, "0");
+      const marker = document.createElement("span"); marker.className = "space-card-number"; marker.textContent = number;
+      const title = document.createElement("h3"); title.textContent = space.name;
+      const description = document.createElement("p"); description.textContent = space.description || "Meet people, work on ideas, and try something new.";
+      const details = document.createElement("span"); details.className = "space-card-address"; details.textContent = [space.address, space.cost].filter(Boolean).join(" · ");
+      card.append(marker, title, description, details);
+      card.addEventListener("click", () => showSpace(index));
+      card.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); showSpace(index); } });
+      carousel.append(card);
+    });
+    showSpace(0, { scrollCard: false, fromMap: document.body.classList.contains("spaces-page") });
+  }
+
+  document.querySelector("#space-prev")?.addEventListener("click", () => showSpace(activeIndex - 1));
+  document.querySelector("#space-next")?.addEventListener("click", () => showSpace(activeIndex + 1));
+  carousel.addEventListener("keydown", (event) => {
+    if (event.key === "ArrowRight") showSpace(activeIndex + 1);
+    if (event.key === "ArrowLeft") showSpace(activeIndex - 1);
+  });
+
+  if (window.L) {
+    homeMap = L.map("home-map", { zoomControl: false, scrollWheelZoom: false }).setView([-33.9249, 18.4241], 13);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OpenStreetMap contributors", maxZoom: 19 }).addTo(homeMap);
+    L.control.zoom({ position: "bottomright" }).addTo(homeMap);
+    markers = L.layerGroup().addTo(homeMap);
+  }
+
+  request("/api/spaces").then((loaded) => {
+    spaces = loaded.filter((space) => Number.isFinite(Number(space.latitude)) && Number.isFinite(Number(space.longitude)));
+    if (markers) {
+      mapMarkers = spaces.map((space, index) => {
+        const number = String(index + 1).padStart(2, "0");
+        const icon = L.divIcon({ className: "yc-map-icon", html: `<span class="map-marker-shape" aria-hidden="true"><span>${number}</span></span>`, iconSize: [48, 56], iconAnchor: [24, 52] });
+        const marker = L.marker([space.latitude, space.longitude], { icon, keyboard: true, title: `${number} · ${space.name}` }).bindPopup(`<strong>${number} · ${escapeHtml(space.name)}</strong>`).addTo(markers);
+        marker.on("click", () => showSpace(index, { fromMap: true }));
+        return marker;
+      });
+    }
+    renderSpaces();
+    setTimeout(() => {
+      homeMap?.invalidateSize();
+      if (document.body.classList.contains("spaces-page") && mapMarkers.length > 1) {
+        homeMap.fitBounds(mapMarkers.map((marker) => marker.getLatLng()), { padding: [45, 45], maxZoom: 14 });
+      }
+    }, 100);
+  }).catch(() => { spaces = []; renderSpaces(); });
+}
+
+const revealItems = document.querySelectorAll(".home-page .reveal");
+if ("IntersectionObserver" in window && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  const revealObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add("is-visible");
+      observer.unobserve(entry.target);
+    });
+  }, { threshold: 0.14 });
+  revealItems.forEach((item) => revealObserver.observe(item));
+} else revealItems.forEach((item) => item.classList.add("is-visible"));
+
 const surveyForm = document.querySelector("#survey-form");
 if (surveyForm) {
   async function initializeSurvey() {
     const message = document.querySelector("#survey-message");
+    const spaceSelect = document.querySelector("#survey-space");
+    const introCard = document.querySelector("#survey-intro-card");
+    const surveyDeck = document.querySelector("#survey-deck");
+    const questionCard = document.querySelector("#survey-question-card");
+    const start = document.querySelector("#survey-start");
     try {
+      let spaces = [];
+      try { spaces = await request("/api/spaces"); } catch {}
+      for (const space of spaces) {
+        const option = document.createElement("option"); option.value = space.name; option.textContent = space.name; spaceSelect.append(option);
+      }
+      const other = document.createElement("option"); other.value = "Somewhere else"; other.textContent = "Somewhere else"; spaceSelect.append(other);
       const questions = await request("/api/questions");
+      introCard.querySelector(".card-count").textContent = `01 / ${String(questions.length + 1).padStart(2, "0")}`;
       const answers = Object.fromEntries(questions.map(({ id }) => [id, ""]));
       let index = 0;
       const questionLabel = document.querySelector("#survey-question");
@@ -22,39 +181,74 @@ if (surveyForm) {
       const back = document.querySelector("#survey-back");
       const next = document.querySelector("#survey-next");
       const submit = document.querySelector("#survey-submit");
-      const showQuestion = () => {
-        document.querySelector("#survey-progress").textContent = `Question ${index + 1} of ${questions.length}`;
+      let transitionPending = false;
+      const showQuestion = (direction = 1) => {
+        questionCard.classList.remove("card-enter-next", "card-enter-back", "card-leave-next", "card-leave-back");
+        void questionCard.offsetWidth;
+        questionCard.classList.add(direction < 0 ? "card-enter-back" : "card-enter-next");
+        document.querySelector("#survey-progress").textContent = `QUESTION ${index + 1} / ${questions.length}`;
         questionLabel.textContent = questions[index].text;
         answerField.value = answers[questions[index].id];
         back.disabled = index === 0;
         next.hidden = index === questions.length - 1;
         submit.hidden = index !== questions.length - 1;
+        questionCard.querySelector(".card-count").textContent = `${String(index + 2).padStart(2, "0")} / ${String(questions.length + 1).padStart(2, "0")}`;
+        surveyDeck.classList.remove("is-dealing-forward", "is-dealing-back");
+        surveyDeck.classList.add(direction < 0 ? "is-dealing-back" : "is-dealing-forward");
+        window.setTimeout(() => surveyDeck.classList.remove("is-dealing-forward", "is-dealing-back"), 480);
       };
+      const moveQuestion = (direction) => {
+        const nextIndex = index + direction;
+        if (transitionPending || nextIndex < 0 || nextIndex >= questions.length) return;
+        answers[questions[index].id] = answerField.value;
+        transitionPending = true;
+        surveyDeck.classList.remove("is-dealing-forward", "is-dealing-back");
+        void surveyDeck.offsetWidth;
+        surveyDeck.classList.add(direction > 0 ? "is-dealing-forward" : "is-dealing-back");
+        questionCard.classList.remove("card-enter-next", "card-enter-back", "card-leave-next", "card-leave-back");
+        questionCard.classList.add(direction > 0 ? "card-leave-next" : "card-leave-back");
+        window.setTimeout(() => {
+          index = nextIndex;
+          showQuestion(direction);
+          window.setTimeout(() => { transitionPending = false; }, 480);
+        }, 270);
+      };
+      start.addEventListener("click", () => {
+        const introFields = [spaceSelect, document.querySelector("#survey-first-name"), document.querySelector("#survey-last-name")];
+        const valid = introFields.every((field) => {
+          if (field.checkValidity()) return true;
+          field.reportValidity();
+          return false;
+        });
+        if (!valid) return;
+        introCard.hidden = true;
+        surveyDeck.hidden = false;
+        showQuestion(1);
+      });
       answerField.addEventListener("input", () => { answers[questions[index].id] = answerField.value; });
-      back.addEventListener("click", () => { answers[questions[index].id] = answerField.value; index--; showQuestion(); });
-      next.addEventListener("click", () => { answers[questions[index].id] = answerField.value; index++; showQuestion(); });
-      showQuestion();
-
+      back.addEventListener("click", () => moveQuestion(-1));
+      next.addEventListener("click", () => moveQuestion(1));
+      let touchX = 0;
+      questionCard.addEventListener("pointerdown", (event) => { touchX = event.clientX; });
+      questionCard.addEventListener("pointerup", (event) => {
+        const delta = event.clientX - touchX;
+        if (Math.abs(delta) < 70) return;
+        if (delta < 0) moveQuestion(1);
+        if (delta > 0) moveQuestion(-1);
+      });
       surveyForm.addEventListener("submit", async (event) => {
         event.preventDefault();
         answers[questions[index].id] = answerField.value;
-        if (!answers[questions[0].id].trim()) {
-          message.textContent = "Please answer the first question before sending.";
-          index = 0;
-          showQuestion();
-          return;
-        }
         message.textContent = "Sending…";
         try {
           const result = await request("/api/surveys", {
             method: "POST",
-            body: JSON.stringify({ answers, consent: document.querySelector("#survey-consent").checked }),
+            body: JSON.stringify({ answers, consent: document.querySelector("#survey-consent").checked, thirdSpace: spaceSelect.value, firstName: document.querySelector("#survey-first-name").value, lastName: document.querySelector("#survey-last-name").value }),
           });
           message.textContent = result.message;
           for (const id of Object.keys(answers)) answers[id] = "";
           document.querySelector("#survey-consent").checked = false;
-          index = 0;
-          showQuestion();
+          index = 0; surveyDeck.hidden = true; introCard.hidden = false; surveyForm.reset();
         } catch (error) { message.textContent = error.message; }
       });
     } catch (error) { message.textContent = error.message; }
@@ -64,89 +258,91 @@ if (surveyForm) {
 
 const memberForm = document.querySelector("#member-form");
 if (memberForm) {
+  const fields = document.querySelector("#member-fields");
+  const success = document.querySelector("#member-success");
+  const errorMessage = document.querySelector("#member-error");
+  const submitButton = memberForm.querySelector(".member-submit");
+  const submitLabel = memberForm.querySelector(".submit-label");
+  const nameField = document.querySelector("#member-name");
+  const emailField = document.querySelector("#member-email");
+  const consentField = document.querySelector("#member-consent");
+
+  function clearMemberError() {
+    errorMessage.hidden = true;
+    errorMessage.textContent = "";
+    [nameField, emailField, consentField].forEach((field) => field.removeAttribute("aria-invalid"));
+  }
+
+  function showMemberError(message, field) {
+    errorMessage.textContent = message;
+    errorMessage.hidden = false;
+    if (field) {
+      field.setAttribute("aria-invalid", "true");
+      field.focus();
+    } else errorMessage.focus();
+  }
+
+  [nameField, emailField, consentField].forEach((field) => field.addEventListener("input", clearMemberError));
+  consentField.addEventListener("change", clearMemberError);
+
   memberForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const message = document.querySelector("#member-message");
-    message.textContent = "Saving…";
+    clearMemberError();
+    if (!nameField.value.trim()) return showMemberError("Pop your name in so we know who to say hello to.", nameField);
+    if (!emailField.checkValidity()) return showMemberError("That email address doesn’t look quite right. Try checking it for a typo.", emailField);
+    if (!consentField.checked) return showMemberError("Please let us know it’s okay to contact you before joining.", consentField);
+
+    submitButton.disabled = true;
+    submitButton.setAttribute("aria-busy", "true");
+    submitLabel.textContent = "Joining you…";
+    memberForm.classList.add("is-submitting");
     try {
-      const result = await request("/api/members", {
+      await request("/api/members", {
         method: "POST",
-        body: JSON.stringify({ email: document.querySelector("#member-email").value, phone: document.querySelector("#member-phone").value, consent: document.querySelector("#member-consent").checked }),
+        body: JSON.stringify({ name: nameField.value.trim(), email: emailField.value.trim(), consent: consentField.checked }),
       });
-      message.textContent = result.message;
-      event.target.reset();
-    } catch (error) { message.textContent = error.message; }
+      document.querySelector("#member-success-copy").textContent = `Thanks, ${nameField.value.trim()}! You’re on the list. We can’t wait to share what’s happening with Youth Collective.`;
+      fields.hidden = true;
+      success.hidden = false;
+      success.focus();
+      memberForm.reset();
+    } catch (error) {
+      showMemberError(error.message || "We couldn’t save your sign-up just now. Please try again in a moment.");
+    } finally {
+      submitButton.disabled = false;
+      submitButton.removeAttribute("aria-busy");
+      submitLabel.textContent = "Count me in";
+      memberForm.classList.remove("is-submitting");
+    }
+  });
+
+  memberForm.querySelector(".member-again").addEventListener("click", () => {
+    success.hidden = true;
+    fields.hidden = false;
+    clearMemberError();
+    nameField.focus();
   });
 }
 
 const mapElement = document.querySelector("#map");
 if (mapElement) {
-  async function loadSpaces(markers) {
-    try {
-      const spaces = await request("/api/spaces");
-      markers.clearLayers();
-      for (const space of spaces) {
-        const details = [space.address, space.description, space.cost].filter(Boolean).map(escapeHtml);
-        const popup = `<strong>${escapeHtml(space.name)}</strong>${details.length ? `<br>${details.join("<br>")}` : ""}`;
-        L.marker([space.latitude, space.longitude]).bindPopup(popup).addTo(markers);
-      }
-      document.querySelector("#map-message").textContent = spaces.length ? `${spaces.length} space${spaces.length === 1 ? "" : "s"} on the map.` : "No spaces added yet. Know a welcoming place? Add it below.";
-    } catch (error) { document.querySelector("#map-message").textContent = error.message; }
-  }
-
   async function initializeMap() {
-    if (!window.L) {
-      document.querySelector("#map-message").textContent = "The map library could not load. Check your internet connection.";
-      return;
-    }
+    if (!window.L) { document.querySelector("#map-message").textContent = "The map could not load. Check your internet connection."; return; }
     try {
       const config = await request("/api/config");
       document.querySelector("#city-name").textContent = `A map of youth voices, spaces, and opportunities in ${config.city}.`;
       const map = L.map("map").setView(config.center, 13);
-      const key = config.cartoApiKey ? `?key=${encodeURIComponent(config.cartoApiKey)}` : "";
-      L.tileLayer(`https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png${key}`, {
-        attribution: "© OpenStreetMap contributors, © CARTO",
-        maxZoom: 20,
-      }).addTo(map);
-      const markers = L.layerGroup().addTo(map);
-      await loadSpaces(markers);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OpenStreetMap contributors", maxZoom: 19 }).addTo(map);
+      const spaces = await request("/api/spaces");
+      const markers = [];
+      for (const space of spaces) {
+        const details = [space.address, space.description, space.cost].filter(Boolean).map(escapeHtml);
+        L.circleMarker([space.latitude, space.longitude], { radius: 8, color: "#3e2b7d", weight: 2, fillColor: "#ee91bd", fillOpacity: 1 }).bindPopup(`<strong>${escapeHtml(space.name)}</strong>${details.length ? `<br>${details.join("<br>")}` : ""}`).addTo(map);
+        markers.push([space.latitude, space.longitude]);
+      }
+      if (markers.length > 1) map.fitBounds(markers, { padding: [32, 32] });
+      document.querySelector("#map-message").textContent = spaces.length ? `${spaces.length} ${spaces.length === 1 ? "space" : "spaces"} on the map.` : "No third spaces have been added yet.";
     } catch (error) { document.querySelector("#map-message").textContent = error.message; }
   }
   initializeMap();
-}
-
-const insightContainer = document.querySelector("#question-insights");
-if (insightContainer) {
-  async function loadInsights() {
-    try {
-      const data = await request("/api/insights");
-      document.querySelector("#response-count").textContent = `${data.responseCount} survey response${data.responseCount === 1 ? "" : "s"} (${data.analyzedResponses} included in these insights).`;
-      insightContainer.replaceChildren();
-      for (const question of data.questions) {
-        const section = document.createElement("section");
-        const heading = document.createElement("h3");
-        heading.textContent = question.label;
-        const count = document.createElement("p");
-        count.textContent = `${question.answerCount} answer${question.answerCount === 1 ? "" : "s"}`;
-        const words = document.createElement("p");
-        words.textContent = question.words.length ? question.words.map(({ word, count: total }) => `${word} (${total})`).join(" · ") : "No shared themes yet.";
-        section.append(heading, count, words);
-        insightContainer.append(section);
-      }
-      document.querySelector("#summary-text").textContent = data.summary;
-    } catch (error) {
-      document.querySelector("#response-count").textContent = error.message;
-    }
-  }
-
-  loadInsights();
-  document.querySelector("#summary-button").addEventListener("click", async () => {
-    const status = document.querySelector("#summary-status");
-    status.textContent = "Creating a summary from anonymous survey answers…";
-    try {
-      const data = await request("/api/insights/summary", { method: "POST", body: "{}" });
-      document.querySelector("#summary-text").textContent = data.summary;
-      status.textContent = `Summary based on ${data.responseCount} responses.`;
-    } catch (error) { status.textContent = error.message; }
-  });
 }

@@ -1,33 +1,34 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Share your voice — Youth Collective</title>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#3e2b7d">
+  <meta name="description" content="Share your experiences and ideas about Cape Town’s inner city with Youth Collective.">
+  <title>Share Your Voice — Youth Collective</title><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="stylesheet" href="/styles.css">
 </head>
-<body>
-  <header>
-    <h1>Youth Collective</h1>
-    <p>Inner City youth voices, spaces, and opportunities</p>
-    <nav aria-label="Main navigation">
-      <a href="/survey.html" aria-current="page">Share your voice</a> |
-      <a href="/spaces.html">Find a space</a> |
-      <a href="/insights.html">Community insights</a> |
-      <a href="/join.html">Join Youth Collective</a>
-    </nav>
-  </header>
-  <main>
-    <h2>Tell us about your Inner City</h2>
-    <p>One question at a time. Your answers are anonymous. Please leave out your name, phone number, address, and other identifying details.</p>
-    <form id="survey-form">
-      <p id="survey-progress"></p>
-      <label id="survey-question" for="survey-answer"></label>
-      <p><textarea id="survey-answer" rows="3" maxlength="1000"></textarea></p>
-      <p><button type="button" id="survey-back">Back</button> <button type="button" id="survey-next">Next</button> <button type="submit" id="survey-submit" hidden>Send my answers</button></p>
-      <label><input type="checkbox" id="survey-consent" required> I agree to share these anonymous answers for community insights.</label>
+<body class="form-page survey-page">
+  <header class="site-header"><a class="brand-lockup" href="/" aria-label="Youth Collective home"><img src="/branding/Youth%20Collective%20wordmark%20cream.svg" alt="Youth Collective"></a><a class="back-home" href="/">← Home</a></header>
+  <main class="form-main">
+    <div class="form-intro"><span class="eyebrow">Your city, your voice / 01</span><h1>Share your voice<span class="heading-dot">.</span></h1></div>
+    <form id="survey-form" class="card-form">
+      <div class="survey-card is-active" id="survey-intro-card">
+        <div class="card-topline"><span class="card-step">START HERE</span><span class="card-count">01 / …</span></div>
+        <h2>Where are you, and who are you?</h2>
+        <div class="field-grid"><label class="field field-wide" for="survey-space"><span>Which third space are you at?</span><select id="survey-space" required><option value="">Choose a space</option></select></label><label class="field" for="survey-first-name"><span>Name</span><input id="survey-first-name" autocomplete="given-name" maxlength="100" required></label><label class="field" for="survey-last-name"><span>Surname</span><input id="survey-last-name" autocomplete="family-name" maxlength="100" required></label></div>
+        <button type="button" id="survey-start" class="button">Start the survey <span aria-hidden="true">→</span></button>
+      </div>
+      <div class="survey-deck" id="survey-deck" hidden>
+        <div class="survey-card" id="survey-question-card">
+          <div class="card-topline"><span class="card-step" id="survey-progress"></span><span class="card-count">YOUR VOICE MATTERS</span></div>
+          <label class="survey-question" id="survey-question" for="survey-answer"></label>
+          <textarea id="survey-answer" rows="4" maxlength="1000" placeholder="Write your answer here…"></textarea>
+          <div class="survey-actions"><button type="button" class="button button-outline" id="survey-back">← Back</button><span class="swipe-hint">Tap Next or swipe</span><button type="button" class="button" id="survey-next">Next <span aria-hidden="true">→</span></button><button type="submit" class="button" id="survey-submit" hidden>Send my answers <span aria-hidden="true">↗</span></button></div>
+          <label class="consent-line"><input type="checkbox" id="survey-consent" required> I agree to share my answers with Youth Collective.</label>
+        </div>
+      </div>
     </form>
-    <p id="survey-message" role="status"></p>
+    <p id="survey-message" class="form-message" role="status"></p>
   </main>
+  <footer class="site-footer"><a class="footer-brand" href="/"><img src="/branding/Youth%20Collective%20wordmark%20cream.svg" alt="Youth Collective"></a><span>Inner City youth voices, spaces, and opportunities</span><a href="/join.html">Join us ↗</a></footer>
   <script src="/app.js" defer></script>
 </body>
 </html>
