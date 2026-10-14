@@ -78,6 +78,19 @@ function scheduleMongoReconnect() {
   mongoReconnectTimer.unref();
 }
 
+function mongoConnectionErrorDetails(error) {
+  const summary = String(error.cause?.message || error.message).split("\n")[0].slice(0, 180);
+  const servers = [...(error.reason?.servers?.values?.() || [])]
+    .map((server) => {
+      const issue = server.error;
+      return issue
+        ? `${server.address}: ${issue.name || "connection error"}: ${String(issue.message || "").split("\n")[0].slice(0, 180)}`
+        : `${server.address}: ${server.type || "unavailable"}`;
+    })
+    .slice(0, 10);
+  return servers.length ? `${summary}; servers: ${servers.join(" | ")}` : summary;
+}
+
 function connectMongo() {
   if (mongoConnecting || shuttingDown) return mongoConnecting;
   mongoConnecting = (async () => {
@@ -105,7 +118,7 @@ function connectMongo() {
     } catch (error) {
       await client?.close().catch(() => {});
       const delaySeconds = Math.ceil(mongoRetryDelay / 1000);
-      const details = String(error.cause?.message || error.message).split("\n")[0].slice(0, 180);
+      const details = mongoConnectionErrorDetails(error);
       console.error(`MongoDB connection failed (${error.name}): ${details}. Retrying in ${delaySeconds}s.`);
     }
   })().finally(() => {
