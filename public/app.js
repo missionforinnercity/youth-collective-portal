@@ -156,6 +156,46 @@ if ("IntersectionObserver" in window && !window.matchMedia("(prefers-reduced-mot
   revealItems.forEach((item) => revealObserver.observe(item));
 } else revealItems.forEach((item) => item.classList.add("is-visible"));
 
+const scrollRevealHeadings = document.querySelectorAll(".home-page .scroll-reveal-text");
+if (scrollRevealHeadings.length && window.gsap && window.ScrollTrigger && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  window.gsap.registerPlugin(window.ScrollTrigger);
+  scrollRevealHeadings.forEach((heading) => {
+    const textNodes = [];
+    const walker = document.createTreeWalker(heading, NodeFilter.SHOW_TEXT);
+    while (walker.nextNode()) textNodes.push(walker.currentNode);
+
+    const words = [];
+    textNodes.forEach((textNode) => {
+      const fragment = document.createDocumentFragment();
+      (textNode.textContent.match(/\s+|[^\s]+/g) || []).forEach((part) => {
+        if (/^\s+$/.test(part)) {
+          fragment.append(document.createTextNode(part));
+          return;
+        }
+        const word = document.createElement("span");
+        word.className = "scroll-reveal-word";
+        word.textContent = part;
+        words.push(word);
+        fragment.append(word);
+      });
+      textNode.replaceWith(fragment);
+    });
+
+    window.gsap.fromTo(words, { y: 22, autoAlpha: 0 }, {
+      y: 0,
+      autoAlpha: 1,
+      stagger: 0.06,
+      ease: "none",
+      scrollTrigger: {
+        trigger: heading,
+        start: "top 88%",
+        end: "top 58%",
+        scrub: 0.6,
+      },
+    });
+  });
+}
+
 const surveyForm = document.querySelector("#survey-form");
 if (surveyForm) {
   async function initializeSurvey() {
