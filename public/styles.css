@@ -283,7 +283,11 @@ body:has(#admin-workspace) nav { display: flex; gap: 20px; flex-wrap: wrap; }
 .hero-button { border-color:var(--ink); background:var(--yellow); color:var(--ink); }
 .hero-button:hover { background:var(--orange); color:var(--cream); }
 .hero-art { position:relative; z-index:2; width:100%; height:510px; display:flex; align-items:center; justify-content:center; pointer-events:none; }
-.hero-logo-panel { position:relative; isolation:isolate; width:auto; max-width:100%; height:clamp(350px, 45vw, 650px); aspect-ratio:188.46 / 270.05; display:grid; place-items:center; }
+.hero-ornament { position:absolute; z-index:1; display:block; line-height:1; animation:slow-spin 24s linear infinite; will-change:transform; }
+.hero-sunburst { top:11%; left:-2%; color:var(--purple); font-size:clamp(82px, 7.6vw, 112px); }
+.hero-wheel.wheel-a { top:12%; right:1%; color:var(--orange); font-size:clamp(40px, 3.8vw, 56px); animation-duration:16s; animation-direction:reverse; }
+.hero-wheel.wheel-b { right:-1%; bottom:11%; color:var(--pink); font-size:clamp(36px, 3.5vw, 50px); animation-duration:20s; }
+.hero-logo-panel { position:relative; z-index:2; isolation:isolate; width:auto; max-width:100%; height:clamp(350px, 45vw, 650px); aspect-ratio:188.46 / 270.05; display:grid; place-items:center; }
 .hero-logo-panel::before { content:""; position:absolute; z-index:-1; inset:0; background:url("/branding/yc-logo-cream-backing.svg") center / 100% 100% no-repeat; }
 .hero-logo-panel img { display:block; width:100%; height:100%; object-fit:fill; }
 .home-page .round-link { border-color:var(--ink); background:var(--yellow); }
@@ -350,6 +354,7 @@ body:has(#admin-workspace) nav { display: flex; gap: 20px; flex-wrap: wrap; }
 .home-page .hero h1 { font-size:clamp(58px, 6.2vw, 96px); line-height:.98; letter-spacing:-.02em; }
 .home-page .hero-button { margin-top:24px; }
 .home-page .hero-art { position:relative; top:auto; right:auto; width:100%; height:510px; }
+.home-page .hero-art .hero-logo-panel { flex:none; }
 .home-page .section-heading { align-items:flex-end; gap:clamp(30px, 6vw, 90px); margin-bottom:56px; }
 .home-page .section-heading h1, .home-page .section-heading h2 { font-size:clamp(60px, 7.6vw, 100px); line-height:.9; }
 .home-page .space-explorer { min-height:510px; }
@@ -511,8 +516,14 @@ body:has(#admin-workspace) nav { display: flex; gap: 20px; flex-wrap: wrap; }
   .home-page .hero h1 { margin:0; font-size:clamp(39px, 10.5vw, 46px); line-height:.98; letter-spacing:-.045em; }
   .home-page .word-window { width:min(8.8em, calc(100vw - 40px)); height:1.08em; font-size:.84em; }
   .home-page .hero-button { min-height:44px; margin-top:17px; padding-inline:15px; gap:15px; font-size:9px; }
-  .home-page .hero-art { display:none; }
+  .home-page .hero-art { display:block; position:absolute; top:22%; right:0; bottom:auto; width:34%; height:58%; }
+  .home-page .hero-art .hero-logo-panel { display:none; }
+  .home-page .hero-sunburst { top:2%; left:12%; font-size:clamp(58px, 19vw, 78px); }
+  .home-page .hero-wheel.wheel-a { top:43%; right:-7%; font-size:clamp(43px, 14vw, 58px); }
+  .home-page .hero-wheel.wheel-b { right:12%; bottom:2%; font-size:clamp(34px, 11vw, 44px); }
 }
+
+@keyframes slow-spin { to { transform:rotate(360deg); } }
 
 @media (hover:hover) and (pointer:fine) {
   body, body * { cursor:url("/branding/yc-cursor.svg") 2 2, auto; }
@@ -679,4 +690,108 @@ body:has(#admin-workspace) nav { display: flex; gap: 20px; flex-wrap: wrap; }
   .site-footer .footer-support { font-size:6px; }
   .site-footer .footer-support img { width:66px; }
   .home-page .site-footer > a:last-child::after { font-size:7px; }
+}
+
+/* Keep the footer's size and content rhythm consistent across all pages. */
+.site-footer,
+.home-page .site-footer,
+.survey-page .site-footer,
+.spaces-page .site-footer {
+  min-height:100px;
+  padding:18px clamp(20px, 3.4vw, 48px);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:clamp(14px, 2vw, 30px);
+  font-size:10px;
+}
+.survey-page { grid-template-rows:96px minmax(0, 1fr) 100px; }
+.site-footer .footer-brand,
+.home-page .site-footer .footer-brand,
+.survey-page .site-footer .footer-brand,
+.spaces-page .site-footer .footer-brand {
+  flex:0 0 145px;
+  width:145px;
+  min-width:0;
+}
+.site-footer .footer-brand img { max-height:43px; }
+.site-footer > span {
+  display:block;
+  flex:1 1 170px;
+  max-width:300px;
+  font-size:10px;
+  line-height:1.35;
+  letter-spacing:.04em;
+}
+.site-footer .footer-support {
+  display:inline-flex;
+  flex:0 1 auto;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+  white-space:nowrap;
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:.12em;
+}
+.site-footer .footer-support img {
+  width:clamp(112px, 11vw, 150px);
+  height:42px;
+  flex:none;
+  object-fit:contain;
+}
+.site-footer > a:last-child {
+  flex:0 0 auto;
+  max-width:none;
+  white-space:nowrap;
+  font-size:10px;
+  letter-spacing:.06em;
+}
+.home-page .site-footer > a:last-child { font-size:10px; max-width:none; }
+.home-page .site-footer > a:last-child::after { content:none; }
+
+@media (max-width:760px) {
+  .site-footer,
+  .home-page .site-footer,
+  .survey-page .site-footer,
+  .spaces-page .site-footer {
+    min-height:94px;
+    padding:12px 20px;
+    display:grid;
+    grid-template-columns:minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:"brand sponsor" "cta cta";
+    align-items:center;
+    gap:8px 12px;
+  }
+  .site-footer .footer-brand,
+  .home-page .site-footer .footer-brand,
+  .survey-page .site-footer .footer-brand,
+  .spaces-page .site-footer .footer-brand {
+    grid-area:brand;
+    justify-self:start;
+    flex:none;
+    width:clamp(72px, 24vw, 98px);
+  }
+  .site-footer .footer-brand img { max-height:32px; }
+  .site-footer > span { display:none; }
+  .site-footer .footer-support {
+    grid-area:sponsor;
+    justify-self:end;
+    gap:5px;
+    font-size:8px;
+    letter-spacing:.055em;
+  }
+  .site-footer .footer-support img {
+    width:clamp(62px, 20vw, 82px);
+    height:30px;
+  }
+  .site-footer > a:last-child,
+  .home-page .site-footer > a:last-child {
+    grid-area:cta;
+    justify-self:end;
+    max-width:100%;
+    font-size:8px;
+    letter-spacing:.04em;
+  }
+  .survey-page { grid-template-rows:86px minmax(0, 1fr) 94px; }
 }
