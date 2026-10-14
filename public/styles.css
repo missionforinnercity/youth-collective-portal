@@ -287,9 +287,20 @@ body:has(#admin-workspace) nav { display: flex; gap: 20px; flex-wrap: wrap; }
 .hero-sunburst { top:11%; left:-2%; color:var(--purple); font-size:clamp(82px, 7.6vw, 112px); }
 .hero-wheel.wheel-a { top:12%; right:1%; color:var(--orange); font-size:clamp(40px, 3.8vw, 56px); animation-duration:16s; animation-direction:reverse; }
 .hero-wheel.wheel-b { right:-1%; bottom:11%; color:var(--pink); font-size:clamp(36px, 3.5vw, 50px); animation-duration:20s; }
-.hero-logo-panel { position:relative; z-index:2; isolation:isolate; width:auto; max-width:100%; height:clamp(350px, 45vw, 650px); aspect-ratio:188.46 / 270.05; display:grid; place-items:center; }
+.hero-logo-panel { position:relative; z-index:2; isolation:isolate; width:auto; max-width:100%; height:clamp(350px, 45vw, 650px); aspect-ratio:188.46 / 270.05; display:grid; place-items:center; padding:0; border:0; background:transparent; color:inherit; font:inherit; appearance:none; pointer-events:auto; cursor:pointer; transition:transform .2s ease; }
+.hero-logo-panel:hover { transform:rotate(-1deg) scale(1.015); }
+.hero-logo-panel:active { transform:scale(.97); }
+.hero-logo-panel:focus-visible { outline:3px solid var(--purple); outline-offset:8px; border-radius:32% 32% 26% 26%; }
+.hero-logo-panel.is-idle-nudge { animation:hero-logo-nudge 650ms ease-in-out; }
+@keyframes hero-logo-nudge { 0%,100% { transform:rotate(0) scale(1); } 22% { transform:rotate(-1deg) translateX(-5px); } 44% { transform:rotate(1deg) translateX(4px); } 66% { transform:rotate(-.6deg) translateX(-2px); } }
 .hero-logo-panel::before { content:""; position:absolute; z-index:-1; inset:0; background:url("/branding/yc-logo-cream-backing.svg") center / 100% 100% no-repeat; }
 .hero-logo-panel img { display:block; width:100%; height:100%; object-fit:fill; }
+.hero-pop-piece { position:absolute; z-index:4; pointer-events:none; font:800 var(--piece-size, 26px)/1 var(--display); color:var(--piece-color, var(--orange)); text-shadow:1px 2px 0 var(--ink); animation:hero-pop-out 850ms cubic-bezier(.12,.7,.3,1) both; }
+@keyframes hero-pop-out {
+  0% { opacity:0; transform:translate(-50%,-50%) scale(.25) rotate(0); }
+  12% { opacity:1; }
+  100% { opacity:0; transform:translate(calc(-50% + var(--burst-x)),calc(-50% + var(--burst-y))) scale(.8) rotate(var(--burst-turn)); }
+}
 .home-page .round-link { border-color:var(--ink); background:var(--yellow); }
 .home-page .round-link:hover { background:var(--pink); }
 .home-page .third-spaces { position:relative; width:100%; padding:105px max(48px, calc((100% - 1320px)/2)) 80px; border:0; isolation:isolate; background:var(--cream); }
@@ -528,6 +539,7 @@ body:has(#admin-workspace) nav { display: flex; gap: 20px; flex-wrap: wrap; }
 @media (hover:hover) and (pointer:fine) {
   body, body * { cursor:url("/branding/yc-cursor.svg") 2 2, auto; }
   a, .button, button:not(:disabled), input[type="button"], input[type="submit"], input[type="reset"], select, summary, [role="button"], [role="link"], .space-card, .leaflet-marker-icon.yc-map-icon, .admin-page button:not(:disabled), body:has(#admin-workspace) button:not(:disabled), body:has(#login-section) button:not(:disabled) { cursor:url("/branding/yc-speech-cursor.svg") 27 35, pointer; }
+  body .map-panel, body .map-panel *, body .spaces-map-panel, body .spaces-map-panel * { cursor:url("/branding/yc-cursor.svg") 2 2, auto !important; }
   input, textarea, [contenteditable="true"] { cursor:text; }
 }
 

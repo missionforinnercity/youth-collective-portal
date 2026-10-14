@@ -49,6 +49,74 @@ if (rotatingWord && !window.matchMedia("(prefers-reduced-motion: reduce)").match
   }, 3000);
 }
 
+const heroArt = document.querySelector(".hero-art");
+const heroLogo = document.querySelector(".hero-logo-panel");
+if (heroArt && heroLogo) {
+  const recentLogoClicks = [];
+  const popShapes = ["✦", "✳", "●", "♥", "✦", "✧", "↗"];
+  const popColors = ["#f15528", "#f7d83f", "#ee91bd", "#3e2b7d", "#f5f2e3"];
+  const idleNudgeInterval = 3000;
+  const idleNudgeDuration = 650;
+  let idleNudgeTimer;
+  const dismissIdleNudge = () => {
+    window.clearTimeout(idleNudgeTimer);
+    heroLogo.classList.remove("is-idle-nudge");
+  };
+  const scheduleIdleNudge = (delay = idleNudgeInterval) => {
+    window.clearTimeout(idleNudgeTimer);
+    idleNudgeTimer = window.setTimeout(() => {
+      if (!heroLogo.matches(":hover") && document.activeElement !== heroLogo) heroLogo.classList.add("is-idle-nudge");
+    }, delay);
+  };
+  heroLogo.addEventListener("pointerenter", dismissIdleNudge);
+  heroLogo.addEventListener("pointerleave", () => scheduleIdleNudge());
+  heroLogo.addEventListener("focus", dismissIdleNudge);
+  heroLogo.addEventListener("blur", () => scheduleIdleNudge());
+  heroLogo.addEventListener("animationend", (event) => {
+    if (event.animationName !== "hero-logo-nudge") return;
+    heroLogo.classList.remove("is-idle-nudge");
+    if (!heroLogo.matches(":hover") && document.activeElement !== heroLogo) {
+      scheduleIdleNudge(idleNudgeInterval - idleNudgeDuration);
+    }
+  });
+  scheduleIdleNudge();
+
+  heroLogo.addEventListener("click", () => {
+    dismissIdleNudge();
+    const now = performance.now();
+    while (recentLogoClicks.length && now - recentLogoClicks[0] > 1100) recentLogoClicks.shift();
+    recentLogoClicks.push(now);
+    const pieceCount = Math.min(18, 2 + recentLogoClicks.length * 2);
+    const artBounds = heroArt.getBoundingClientRect();
+    const logoBounds = heroLogo.getBoundingClientRect();
+    const originX = logoBounds.left - artBounds.left + logoBounds.width / 2;
+    const originY = logoBounds.top - artBounds.top + logoBounds.height / 2;
+
+    for (let index = 0; index < pieceCount; index += 1) {
+      const piece = document.createElement("span");
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 90 + Math.random() * 150;
+      piece.className = "hero-pop-piece";
+      piece.setAttribute("aria-hidden", "true");
+      piece.textContent = popShapes[Math.floor(Math.random() * popShapes.length)];
+      piece.style.left = `${originX}px`;
+      piece.style.top = `${originY}px`;
+      piece.style.setProperty("--burst-x", `${Math.cos(angle) * distance}px`);
+      piece.style.setProperty("--burst-y", `${Math.sin(angle) * distance}px`);
+      piece.style.setProperty("--burst-turn", `${Math.round(Math.random() * 260 - 130)}deg`);
+      piece.style.setProperty("--piece-size", `${16 + Math.random() * 20}px`);
+      piece.style.setProperty("--piece-color", popColors[Math.floor(Math.random() * popColors.length)]);
+      heroArt.append(piece);
+      piece.addEventListener("animationend", () => piece.remove(), { once: true });
+      window.setTimeout(() => piece.remove(), 1000);
+    }
+
+    const burstStatus = document.querySelector("#logo-burst-status");
+    if (burstStatus) burstStatus.textContent = `A burst of ${pieceCount} shapes.`;
+    scheduleIdleNudge();
+  });
+}
+
 const carousel = document.querySelector("#space-carousel");
 if (carousel) {
   let spaces = [];
