@@ -53,3 +53,8 @@ After deploying the app, make a QR code that points directly to `/survey.html`. 
 ## Design reference
 
 https://www.byooooob.com/
+
+##improvements
+
+fix bubble centre etxt and remove random objects in word clouds
+remove green card from selector
