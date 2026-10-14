@@ -527,6 +527,7 @@ body:has(#admin-workspace) nav { display: flex; gap: 20px; flex-wrap: wrap; }
 
 @media (hover:hover) and (pointer:fine) {
   body, body * { cursor:url("/branding/yc-cursor.svg") 2 2, auto; }
+  a, .button, button:not(:disabled), input[type="button"], input[type="submit"], input[type="reset"], select, summary, [role="button"], [role="link"], .space-card, .leaflet-marker-icon.yc-map-icon, .admin-page button:not(:disabled), body:has(#admin-workspace) button:not(:disabled), body:has(#login-section) button:not(:disabled) { cursor:url("/branding/yc-speech-cursor.svg") 27 35, pointer; }
   input, textarea, [contenteditable="true"] { cursor:text; }
 }
 
