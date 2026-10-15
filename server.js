@@ -99,7 +99,7 @@ function connectMongo() {
       client = new MongoClient(mongoConnectionString(), {
         serverSelectionTimeoutMS: 10000,
         connectTimeoutMS: 10000,
-        maxPoolSize: 20,
+        maxPoolSize: 5,
         minPoolSize: 0,
         retryReads: true,
         retryWrites: true,
@@ -126,6 +126,16 @@ function connectMongo() {
     if (!db && !mongoReconnectTimer && !shuttingDown) scheduleMongoReconnect();
   });
   return mongoConnecting;
+}
+
+async function ensureMongoConnected() {
+  if (db) return true;
+  if (mongoReconnectTimer) {
+    clearTimeout(mongoReconnectTimer);
+    mongoReconnectTimer = null;
+  }
+  await connectMongo();
+  return Boolean(db);
 }
 
 async function verifyMongoConnection() {
@@ -233,6 +243,16 @@ app.post("/api/admin/login", (req, res) => {
 app.post("/api/admin/logout", (_req, res) => {
   res.setHeader("Set-Cookie", adminCookie("", 0));
   res.json({ authenticated: false });
+});
+
+app.use("/api", async (req, res, next) => {
+  if (req.path === "/health") return next();
+  try {
+    if (await ensureMongoConnected()) return next();
+  } catch (error) {
+    console.error(`MongoDB request initialization failed (${error.name}): ${mongoConnectionErrorDetails(error)}`);
+  }
+  res.status(503).json({ error: "The survey is temporarily unavailable. Please try again shortly." });
 });
 
 app.get("/api/questions", async (_req, res) => {
