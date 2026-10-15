@@ -185,7 +185,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .about-page .site-header { background: var(--blue); border-color: rgba(62,43,125,.14); }
 .about-hero { position: relative; overflow: hidden; isolation: isolate; background: var(--blue); color: var(--about-ink); }
 .about-hero::before { content:""; position:absolute; inset:0; z-index:-1; opacity:.24; background-image:radial-gradient(var(--purple) 1.2px, transparent 1.2px); background-size:19px 19px; mask-image:linear-gradient(90deg, #000, transparent 88%); }
-.about-hero-inner { min-height:600px; padding-block:clamp(78px, 10vw, 142px) 28px; display:grid; grid-template-columns:minmax(0, 1.2fr) minmax(310px, .8fr); align-content:center; align-items:center; column-gap:clamp(32px, 7vw, 105px); row-gap:42px; position:relative; }
+.about-hero-inner { min-height:600px; padding-block:clamp(44px, 6vw, 88px); display:grid; grid-template-columns:minmax(0, 1.2fr) minmax(310px, .8fr); align-content:center; align-items:center; column-gap:clamp(32px, 7vw, 105px); row-gap:42px; position:relative; }
 .about-heading { position:relative; }
 .about-heading .eyebrow, .about-pathways .eyebrow { color:var(--purple); }
 .about-heading h1 { margin:23px 0 0; position:relative; z-index:1; font:400 clamp(76px, 10.4vw, 144px)/.91 var(--display); letter-spacing:-.015em; }
@@ -193,7 +193,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .about-spark { position:absolute; font-size:42px; line-height:1; }
 .about-spark-one { top:8%; right:-5%; color:var(--orange); }
 .about-spark-two { bottom:-16%; right:12%; color:var(--purple); font-size:68px; }
-.about-intro { max-width:450px; margin-top:64px; }
+.about-intro { max-width:450px; margin-top:28px; }
 .about-intro p { margin:0 0 18px; font:clamp(19px, 2vw, 24px)/1.32 var(--serif); }
 .about-intro p + p { font-size:17px; line-height:1.5; }
 .about-hero-button { margin-top:10px; background:var(--yellow, #f7d83f); }
