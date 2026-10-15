@@ -2,7 +2,7 @@
   "name": "youth-collective-portal",
   "version": "1.0.0",
   "private": true,
-  "description": "Youth Collective survey, community signup, and third-space map",
+  "description": "Inner City Youth Collective survey, community signup, and third-space map",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

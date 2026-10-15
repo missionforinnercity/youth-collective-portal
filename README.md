@@ -1,6 +1,6 @@
-# Youth Collective portal
+# Inner City Youth Collective portal
 
-A small Node.js portal for the Youth Collective survey, sign-ups, and third-space map.
+A small Node.js portal for the Inner City Youth Collective survey, sign-ups, and third-space map.
 
 ## Run it
 
@@ -32,7 +32,7 @@ The portal shows the latest 500 survey responses, lets an administrator reorder,
 ## Features
 
 - The survey presents one question at a time and asks for a name, surname, and third space before starting.
-- Youth Collective sign-ups ask for a name and email address. There is no public endpoint for reading sign-up details.
+- Inner City Youth Collective sign-ups ask for a name and email address. There is no public endpoint for reading sign-up details.
 - The third-space map uses OpenStreetMap tiles. Administrators manage places in the admin portal; the public map is read-only.
 - The home page includes an animated wordmark headline and a space carousel connected to its map location.
 

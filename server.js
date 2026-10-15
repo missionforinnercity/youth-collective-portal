@@ -274,7 +274,7 @@ app.post("/api/surveys", async (req, res) => {
   if (!requireDb(res)) return;
   const answers = req.body?.answers;
   const consent = req.body?.consent === true;
-  if (!consent) return res.status(400).json({ error: "Please agree to share your answers with Youth Collective." });
+  if (!consent) return res.status(400).json({ error: "Please agree to share your answers with the Inner City Youth Collective." });
   const respondent = {
     firstName: cleanText(req.body?.firstName, 100),
     lastName: cleanText(req.body?.lastName, 100),
@@ -309,11 +309,11 @@ app.post("/api/members", async (req, res) => {
   const email = cleanText(req.body?.email, 254).toLowerCase();
   if (!name) return res.status(400).json({ error: "Enter your name." });
   if (!/^\S+@\S+\.\S+$/.test(email)) return res.status(400).json({ error: "Enter a valid email address." });
-  if (req.body?.consent !== true) return res.status(400).json({ error: "Please agree to be contacted by Youth Collective." });
+  if (req.body?.consent !== true) return res.status(400).json({ error: "Please agree to be contacted by the Inner City Youth Collective." });
 
   try {
     await db.collection(collectionNames.members).insertOne({ name, email, createdAt: new Date() });
-    res.status(201).json({ message: "You're on the list. Youth Collective will be in touch!" });
+    res.status(201).json({ message: "You're on the list. The Inner City Youth Collective will be in touch!" });
   } catch (error) {
     console.error("Member signup save failed:", error.message);
     res.status(500).json({ error: "We couldn't save your sign-up right now." });
@@ -444,7 +444,7 @@ app.get("/{*splat}", (req, res, next) => {
 
 function start() {
   app.listen(port, () => {
-    console.log(`Youth Collective portal running at http://localhost:${port}`);
+    console.log(`Inner City Youth Collective portal running at http://localhost:${port}`);
     monitorMongoConnection();
     void connectMongo();
   });

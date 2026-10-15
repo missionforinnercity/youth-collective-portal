@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#c7eaf7">
   <meta name="description" content="Meet people, find free third spaces, and share your voice with the Inner City Youth Collective in Cape Town.">
-  <title>Home — Youth Collective</title>
+  <title>Home — Inner City Youth Collective</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 </head>
 <body class="home-page">
   <header class="site-header">
-    <a class="brand-lockup" href="/" aria-label="Youth Collective home"><img src="/branding/Youth%20Collective%20wordmark%20purple.svg" alt="Youth Collective"></a>
+    <a class="brand-lockup" href="/" aria-label="Inner City Youth Collective home"><img src="/branding/Youth%20Collective%20wordmark%20purple.svg" alt="Inner City Youth Collective"></a>
     <button class="menu-toggle" aria-expanded="false" aria-controls="main-menu" type="button"><span></span><span></span><span class="sr-only">Menu</span></button>
     <nav class="main-menu" id="main-menu" aria-label="Main navigation">
       <a href="#third-spaces">Third spaces</a>
@@ -33,7 +33,7 @@
           <span class="hero-ornament hero-sunburst" aria-hidden="true">✳</span>
           <span class="hero-ornament hero-wheel wheel-a" aria-hidden="true">✳</span>
           <span class="hero-ornament hero-wheel wheel-b" aria-hidden="true">✳</span>
-          <button class="hero-logo-panel" type="button" aria-label="Make the Youth Collective logo pop">
+          <button class="hero-logo-panel" type="button" aria-label="Make the Inner City Youth Collective logo pop">
             <img src="/branding/Youth%20Collective%20logo%20tall%20orange.svg" alt="">
           </button>
           <span class="sr-only" id="logo-burst-status" role="status" aria-live="polite"></span>
@@ -43,28 +43,33 @@
 
     <section class="third-spaces section-wrap" id="third-spaces">
       <div class="section-heading">
-        <div><span class="eyebrow">01 / Explore your city</span><h2 class="scroll-reveal-text">Find your<br>somewhere<span class="heading-dot">.</span></h2></div>
-        <p>A free space beyond home, work, or school where you can meet people, work on your ideas, start a business, or try something new, with no obligation to buy anything.</p>
+        <div><span class="eyebrow">01 / Explore your city</span><h2 class="scroll-reveal-text">Youth Spaces<br>in the Inner City</h2></div>
       </div>
       <div class="space-explorer reveal">
         <div class="space-list-panel">
-          <div class="carousel-heading"><span class="eyebrow">Find your somewhere</span><div class="carousel-controls"><button type="button" id="space-prev" aria-label="Previous space">←</button><button type="button" id="space-next" aria-label="Next space">→</button></div></div>
+          <div class="carousel-heading"><span class="eyebrow">Youth spaces</span><div class="carousel-controls"><button type="button" id="space-prev" aria-label="Previous space">←</button><button type="button" id="space-next" aria-label="Next space">→</button></div></div>
           <div class="space-carousel" id="space-carousel" aria-live="polite"><div class="space-empty">Loading third spaces…</div></div>
           <div class="carousel-foot"><span id="space-count">Spaces in the Inner City</span><a href="/spaces.html">View map <span aria-hidden="true">↗</span></a></div>
         </div>
         <div class="map-panel"><div class="map-caption"><span class="map-pin" aria-hidden="true"></span><span id="home-map-label">A map of the Inner City</span></div><div id="home-map" class="home-map" aria-label="Map highlighting the selected third space"></div><div class="map-legend"><span>Pin numbers match the cards</span><span>Tap a pin to explore</span></div><div class="map-credit">© OpenStreetMap contributors</div></div>
       </div>
-      <div class="definition-strip"><span class="definition-word">third space <i>/ˈTHərd ˌspās/</i></span><span class="part-of-speech">noun</span><p>A shared place to spend time, make connections, and feel at home in the city.</p><span class="definition-number">01—03</span></div>
+      <div class="third-space-story" aria-labelledby="third-space-story-title">
+        <h3 id="third-space-story-title">A place to<br><span>feel at home.</span></h3>
+        <div class="third-space-story-copy">
+          <p>These are the Third Spaces across Cape Town’s Inner City where you’re welcome to work, connect with new people, share ideas, and feel at home.</p>
+          <p>Third Spaces are more than just locations. They’re shared spaces where young people can connect, collaborate, and build a sense of belonging.</p>
+          <p>Visit a Third Space, bring a friend, start a conversation, and make place in the Inner City!</p>
+        </div>
+      </div>
     </section>
 
     <section class="voice-cta section-wrap reveal">
-      <div class="voice-cta-mark"><img src="/branding/Youth%20Collective%20logo%20cream.svg" alt="Youth Collective logo"></div>
-      <div><span class="eyebrow">02 / Your city, your voice</span><h2 class="scroll-reveal-text">What would make<br>the city feel like yours?</h2><a class="button button-light" href="/survey.html">Share your voice <span aria-hidden="true">↗</span></a></div>
-      <span class="voice-cta-note">Your voice<br>belongs here.</span>
+      <div class="voice-cta-mark"><img src="/branding/Youth%20Collective%20logo%20cream.svg" alt="Inner City Youth Collective logo"></div>
+      <div><span class="eyebrow">02 / Your city, your voice</span><h2 class="scroll-reveal-text">Share your voice and help shape the Inner City you want to see</h2><a class="button button-light" href="/survey.html">Share your voice <span aria-hidden="true">↗</span></a></div>
     </section>
-    <section class="join-strip section-wrap reveal"><span class="eyebrow">Stay connected</span><p>Good things start with a hello.</p><a class="button" href="/join.html">Join the collective <span aria-hidden="true">↗</span></a></section>
+    <section class="join-strip section-wrap reveal"><p>Join the Inner City Youth Collective</p><a class="button" href="/join.html">Get involved <span aria-hidden="true">↗</span></a></section>
   </main>
-  <footer class="site-footer" id="site-footer"><a href="/" class="footer-brand"><img src="/branding/Youth%20Collective%20wordmark%20purple.svg" alt="Youth Collective"></a><span>Inner City youth voices, spaces, and opportunities</span><div class="footer-support"><span>Supported by</span><img src="/branding/MissionWordmark.webp" alt="Mission for Inner City"></div><a href="/about.html">About Youth Collective ↗</a></footer>
+  <footer class="site-footer" id="site-footer"><a href="/" class="footer-brand"><img src="/branding/Youth%20Collective%20wordmark%20purple.svg" alt="Inner City Youth Collective"></a><span>Inner City youth voices, spaces, and opportunities</span><div class="footer-support"><span>Supported by</span><img src="/branding/MissionWordmark.webp" alt="Mission for Inner City"></div><a href="/about.html">About Inner City Youth Collective ↗</a></footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js" defer></script>

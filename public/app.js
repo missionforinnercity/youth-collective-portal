@@ -409,7 +409,7 @@ if (memberForm) {
         method: "POST",
         body: JSON.stringify({ name: nameField.value.trim(), email: emailField.value.trim(), consent: consentField.checked }),
       });
-      document.querySelector("#member-success-copy").textContent = `Thanks, ${nameField.value.trim()}! You’re on the list. We can’t wait to share what’s happening with Youth Collective.`;
+      document.querySelector("#member-success-copy").textContent = `Thanks, ${nameField.value.trim()}! You’re on the list. We can’t wait to share what’s happening with the Inner City Youth Collective.`;
       fields.hidden = true;
       success.hidden = false;
       success.focus();
