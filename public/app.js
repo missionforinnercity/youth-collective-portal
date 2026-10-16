@@ -302,6 +302,7 @@ if (surveyForm) {
     const spaceSelect = document.querySelector("#survey-space");
     const introCard = document.querySelector("#survey-intro-card");
     const surveyDeck = document.querySelector("#survey-deck");
+    const success = document.querySelector("#survey-success");
     const questionCard = document.querySelector("#survey-question-card");
     const start = document.querySelector("#survey-start");
     try {
@@ -384,10 +385,11 @@ if (surveyForm) {
             method: "POST",
             body: JSON.stringify({ answers, consent: document.querySelector("#survey-consent").checked, thirdSpace: spaceSelect.value, firstName: document.querySelector("#survey-first-name").value, lastName: document.querySelector("#survey-last-name").value }),
           });
-          message.textContent = result.message;
-          for (const id of Object.keys(answers)) answers[id] = "";
-          document.querySelector("#survey-consent").checked = false;
-          index = 0; surveyDeck.hidden = true; introCard.hidden = false; surveyForm.reset();
+          introCard.hidden = true;
+          surveyDeck.hidden = true;
+          success.hidden = false;
+          message.textContent = "";
+          success.focus();
         } catch (error) { message.textContent = error.message; }
       });
     } catch (error) { message.textContent = error.message; }

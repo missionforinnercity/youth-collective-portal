@@ -120,6 +120,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .form-intro > p { max-width: 550px; margin: 22px 0 0; font: 19px/1.45 var(--serif); }
 .card-form { position: relative; isolation: isolate; min-height: 440px; border: 0; background: transparent; }
 .survey-card { position: relative; z-index: 2; min-height: 440px; padding: clamp(24px, 6vw, 56px); border: 2px solid var(--purple); border-radius: 22px; background: var(--cream); color: var(--purple); box-shadow: 0 5px 0 rgba(62,43,125,.22); touch-action: pan-y; }
+.survey-success { width: min(850px, 100%); margin-inline: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.survey-success[hidden] { display: none; }
+.survey-home-button { margin-top: 14px; }
 .join-card { min-height: 440px; padding: clamp(24px, 6vw, 56px); border: 2px solid var(--purple); border-radius: 22px; background: var(--pink); color: var(--purple); }
 .survey-card[hidden] { display: none; }
 .survey-deck { position: relative; isolation: isolate; width: 100%; height: min(100%, 520px); max-height: 520px; min-height: 0; display: grid; place-items: center; perspective: 1200px; }
