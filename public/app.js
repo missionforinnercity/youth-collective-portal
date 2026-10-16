@@ -260,9 +260,8 @@ if (scrollRevealHeadings.length && window.gsap && window.ScrollTrigger && !windo
       textNode.replaceWith(fragment);
     });
 
-    window.gsap.fromTo(words, { y: 22, autoAlpha: 0 }, {
+    window.gsap.fromTo(words, { y: 22 }, {
       y: 0,
-      autoAlpha: 1,
       stagger: 0.06,
       ease: "none",
       scrollTrigger: {
@@ -273,6 +272,27 @@ if (scrollRevealHeadings.length && window.gsap && window.ScrollTrigger && !windo
       },
     });
   });
+}
+
+const storyWords = {
+  work: document.querySelector("#story-word-work"),
+  connect: document.querySelector("#story-word-connect"),
+  create: document.querySelector("#story-word-create"),
+};
+const storySection = document.querySelector(".third-space-story");
+if (storySection && Object.values(storyWords).every(Boolean) && window.gsap && window.ScrollTrigger && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  window.gsap.registerPlugin(window.ScrollTrigger);
+  const storyTitle = document.querySelector("#third-space-story-title");
+  const wordSequence = window.gsap.timeline({
+    scrollTrigger: { trigger: storyTitle, start: "top 85%", end: "bottom 50%", scrub: 0.35 },
+  });
+  const purple = "#3e2b7d";
+  const orange = "#f15528";
+  wordSequence.to(storyWords.work, { color: orange, duration: 0.2, ease: "none" }, 0);
+  wordSequence.to(storyWords.work, { color: purple, duration: 0.16, ease: "none" }, 0.35);
+  wordSequence.to(storyWords.connect, { color: orange, duration: 0.16, ease: "none" }, 0.35);
+  wordSequence.to(storyWords.connect, { color: purple, duration: 0.16, ease: "none" }, 0.7);
+  wordSequence.to(storyWords.create, { color: orange, duration: 0.16, ease: "none" }, 0.7);
 }
 
 const surveyForm = document.querySelector("#survey-form");

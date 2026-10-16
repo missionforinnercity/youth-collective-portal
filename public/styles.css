@@ -215,7 +215,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .about-pathway:hover .about-pathway-link b { transform:translate(3px,-3px); }
 .third-space-story { margin-top:16px; padding-block:42px 12px; display:grid; grid-template-columns:minmax(260px, .8fr) minmax(0, 1.2fr); align-items:start; gap:clamp(38px, 8vw, 120px); border-top:1px solid var(--line); }
 .third-space-story h3 { margin:0; font:400 clamp(42px, 5.7vw, 74px)/.94 var(--display); letter-spacing:-.015em; text-transform:uppercase; }
-.third-space-story h3 span { color:var(--orange); }
+.third-space-story h3 .story-word { color:var(--purple); }
 .third-space-story-copy { max-width:690px; padding-top:3px; }
 .third-space-story-copy p { margin:0 0 17px; font:clamp(18px, 1.6vw, 21px)/1.45 var(--serif); }
 
@@ -612,7 +612,7 @@ body:has(#admin-workspace) nav { display: flex; gap: 20px; flex-wrap: wrap; }
 .admin-page #location-list input, .admin-page #location-list textarea { width: 100%; }
 
 /* GSAP reveals each word of selected homepage headings as they enter view. */
-.scroll-reveal-word { display: inline-block; will-change: transform, opacity; }
+.scroll-reveal-word { display: inline-block; will-change: transform; }
 
 @media (max-width: 760px) {
   .site-header { height: 86px; min-height: 86px; padding: 13px 20px; }
