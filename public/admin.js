@@ -113,6 +113,7 @@ function renderLocations(spaces) {
       ["address", "Address or area", space.address],
       ["description", "Description", space.description || ""],
       ["cost", "Cost", space.cost || ""],
+      ["website", "Website or social link", space.website || ""],
       ["latitude", "Latitude", space.latitude],
       ["longitude", "Longitude", space.longitude],
     ];
@@ -122,7 +123,8 @@ function renderLocations(spaces) {
       const input = name === "description" ? document.createElement("textarea") : document.createElement("input");
       input.name = name;
       input.value = value;
-      input.maxLength = name === "description" ? 500 : 240;
+      input.maxLength = name === "description" ? 500 : name === "website" ? 500 : 240;
+      if (name === "website") input.type = "url";
       if (name === "latitude" || name === "longitude") {
         input.type = "number";
         input.step = "any";

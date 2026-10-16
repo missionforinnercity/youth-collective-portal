@@ -324,7 +324,7 @@ app.get("/api/spaces", async (_req, res) => {
   if (!requireDb(res)) return;
   try {
     const spaces = await db.collection(collectionNames.spaces)
-      .find({}, { projection: { name: 1, description: 1, address: 1, latitude: 1, longitude: 1, cost: 1, createdAt: 1 } })
+      .find({}, { projection: { name: 1, description: 1, address: 1, latitude: 1, longitude: 1, cost: 1, website: 1, createdAt: 1 } })
       .sort({ name: 1 }).limit(500).toArray();
     res.json(spaces.map((space) => ({ ...space, id: space._id.toString(), _id: undefined })));
   } catch (error) {
@@ -339,10 +339,12 @@ function validateSpace(body) {
     address: cleanText(body?.address, 240),
     description: cleanText(body?.description, 500),
     cost: cleanText(body?.cost, 120),
+    website: cleanText(body?.website, 500),
     latitude: Number(body?.latitude),
     longitude: Number(body?.longitude),
   };
   if (!space.name || !space.address || !Number.isFinite(space.latitude) || !Number.isFinite(space.longitude) || Math.abs(space.latitude) > 90 || Math.abs(space.longitude) > 180) return null;
+  if (space.website && !/^https?:\/\//i.test(space.website)) return null;
   return space;
 }
 

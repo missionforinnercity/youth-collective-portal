@@ -25,6 +25,17 @@ function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
 }
 
+function linkedSpaceName(space, label) {
+  let url;
+  try {
+    const parsed = new URL(space.website || "");
+    if (["http:", "https:"].includes(parsed.protocol)) url = parsed.href;
+  } catch { /* Spaces without a valid public link keep a plain-text name. */ }
+  const safeLabel = escapeHtml(label);
+  return url ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${safeLabel}</a>` : safeLabel;
+}
+
+
 const menuToggle = document.querySelector(".menu-toggle");
 menuToggle?.addEventListener("click", () => {
   const expanded = menuToggle.getAttribute("aria-expanded") === "true";
@@ -197,7 +208,7 @@ if (carousel) {
       mapMarkers = spaces.map((space, index) => {
         const number = String(index + 1).padStart(2, "0");
         const icon = L.divIcon({ className: "yc-map-icon", html: `<span class="map-marker-shape" aria-hidden="true"><span>${number}</span></span>`, iconSize: [48, 56], iconAnchor: [24, 52] });
-        const marker = L.marker([space.latitude, space.longitude], { icon, keyboard: true, title: `${number} · ${space.name}` }).bindPopup(`<strong>${number} · ${escapeHtml(space.name)}</strong>`).addTo(markers);
+        const marker = L.marker([space.latitude, space.longitude], { icon, keyboard: true, title: `${number} · ${space.name}` }).bindPopup(`<strong>${linkedSpaceName(space, `${number} · ${space.name}`)}</strong>`).addTo(markers);
         marker.on("click", () => showSpace(index, { fromMap: true }));
         return marker;
       });
@@ -445,7 +456,7 @@ if (mapElement) {
       const markers = [];
       for (const space of spaces) {
         const details = [space.address, space.description, space.cost].filter(Boolean).map(escapeHtml);
-        L.circleMarker([space.latitude, space.longitude], { radius: 8, color: "#3e2b7d", weight: 2, fillColor: "#ee91bd", fillOpacity: 1 }).bindPopup(`<strong>${escapeHtml(space.name)}</strong>${details.length ? `<br>${details.join("<br>")}` : ""}`).addTo(map);
+        L.circleMarker([space.latitude, space.longitude], { radius: 8, color: "#3e2b7d", weight: 2, fillColor: "#ee91bd", fillOpacity: 1 }).bindPopup(`<strong>${linkedSpaceName(space, space.name)}</strong>${details.length ? `<br>${details.join("<br>")}` : ""}`).addTo(map);
         markers.push([space.latitude, space.longitude]);
       }
       if (markers.length > 1) map.fitBounds(markers, { padding: [32, 32] });
