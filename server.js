@@ -15,17 +15,11 @@ const collectionNames = {
   questions: process.env.MONGODB_QUESTIONS_COLLECTION || "survey_questions",
 };
 const defaultQuestions = [
-  "How do you travel coming into the Inner City?",
-  "How do you move around in the Inner City?",
-  "Where do you spend more time when you are in the Inner City?",
-  "Do you feel like you belong in the Inner City?",
-  "Where do you feel like you belong?",
-  "What makes a space welcoming for you in the Inner City?",
-  "What space in the Inner City represents you?",
-  "What challenges do you experience when you are in the Inner City?",
-  "What would you like to see change in the Inner City?",
-  "What opportunities already exist in the Inner City?",
-  "How, if at all, do you earn money in the Inner City?",
+  "How do you get into the Inner City, and how do you move around once you are here? What makes it easy or hard?",
+  "Which space in the Inner City feels like it represents you? What makes it welcoming?",
+  "Where do you spend most of your time in the Inner City, and why there? Is there anywhere you can hang out without spending money?",
+  "How do you find out about opportunities, events or work in the Inner City? What do you wish you had known sooner?",
+  "If you could add one space, service or opportunity for young people, what would it be and where would it go?",
 ].map((text, index) => ({ id: `q${index + 1}`, text }));
 
 app.disable("x-powered-by");
