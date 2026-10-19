@@ -35,6 +35,10 @@ let mongoHealthTimer;
 let mongoRetryDelay = 1000;
 let shuttingDown = false;
 const failedAdminLogins = new Map();
+const geocodeCache = new Map();
+const geocodeInFlight = new Map();
+let geocodeQueue = Promise.resolve();
+let lastGeocodeRequestAt = 0;
 
 function mongoConnectionString() {
   let uri = (process.env.MONGODB_URI || "").trim().replace(/^['"]|['"]$/g, "");
@@ -200,6 +204,46 @@ function adminCookie(token, maxAge) {
   return `yc_admin=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${maxAge}${secure}`;
 }
 
+function getGeocodeMatches(address) {
+  const city = (process.env.CITY_NAME || "Cape Town").replace(/\s+CBD$/i, "");
+  let query = address;
+  if (!/cape town|south africa/i.test(query)) query += `, ${city}`;
+  if (!/south africa/i.test(query)) query += ", South Africa";
+  const cacheKey = query.toLocaleLowerCase();
+  if (geocodeCache.has(cacheKey)) return Promise.resolve(geocodeCache.get(cacheKey));
+  if (geocodeInFlight.has(cacheKey)) return geocodeInFlight.get(cacheKey);
+
+  const request = geocodeQueue.then(async () => {
+    const wait = Math.max(0, 1100 - (Date.now() - lastGeocodeRequestAt));
+    if (wait) await new Promise((resolve) => setTimeout(resolve, wait));
+    lastGeocodeRequestAt = Date.now();
+    const endpoint = process.env.GEOCODING_SEARCH_URL || "https://nominatim.openstreetmap.org/search";
+    const url = new URL(endpoint);
+    url.searchParams.set("q", query);
+    url.searchParams.set("format", "jsonv2");
+    url.searchParams.set("limit", "5");
+    url.searchParams.set("countrycodes", "za");
+    const response = await fetch(url, {
+      headers: { "User-Agent": "InnerCityYouthCollectivePortal/1.0", "Accept-Language": "en" },
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!response.ok) throw new Error("Address lookup is unavailable right now. You can enter coordinates manually.");
+    const data = await response.json();
+    const matches = (Array.isArray(data) ? data : []).map((match) => ({
+      label: cleanText(match.display_name, 300),
+      latitude: Number(match.lat),
+      longitude: Number(match.lon),
+    })).filter((match) => match.label && Number.isFinite(match.latitude) && Number.isFinite(match.longitude));
+    if (geocodeCache.size >= 250) geocodeCache.delete(geocodeCache.keys().next().value);
+    geocodeCache.set(cacheKey, matches);
+    return matches;
+  });
+  geocodeQueue = request.then(() => undefined, () => undefined);
+  geocodeInFlight.set(cacheKey, request);
+  request.finally(() => geocodeInFlight.delete(cacheKey)).catch(() => {});
+  return request;
+}
+
 app.get("/api/config", (_req, res) => {
   res.json({
     city: process.env.CITY_NAME || "Cape Town CBD",
@@ -237,6 +281,18 @@ app.post("/api/admin/login", (req, res) => {
 app.post("/api/admin/logout", (_req, res) => {
   res.setHeader("Set-Cookie", adminCookie("", 0));
   res.json({ authenticated: false });
+});
+
+app.post("/api/admin/geocode", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const address = cleanText(req.body?.address, 240);
+  if (!address) return res.status(400).json({ error: "Enter a street address or area to look up." });
+  try {
+    res.json({ matches: await getGeocodeMatches(address) });
+  } catch (error) {
+    console.error("Address lookup failed:", error.message);
+    res.status(502).json({ error: error.message || "Address lookup failed. You can enter coordinates manually." });
+  }
 });
 
 app.use("/api", async (req, res, next) => {
@@ -327,6 +383,67 @@ app.get("/api/spaces", async (_req, res) => {
   }
 });
 
+async function getDailyCounts(collectionName) {
+  return db.collection(collectionName).aggregate([
+    { $match: { createdAt: { $type: "date" } } },
+    { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt", timezone: "Africa/Johannesburg" } }, count: { $sum: 1 } } },
+    { $sort: { _id: 1 } },
+  ]).toArray();
+}
+
+app.get("/api/admin/overview", async (req, res) => {
+  if (!requireAdmin(req, res) || !requireDb(res)) return;
+  try {
+    const [members, surveys, spaces, memberDaily, surveyDaily] = await Promise.all([
+      db.collection(collectionNames.members).countDocuments(),
+      db.collection(collectionNames.surveys).countDocuments(),
+      db.collection(collectionNames.spaces).countDocuments(),
+      getDailyCounts(collectionNames.members),
+      getDailyCounts(collectionNames.surveys),
+    ]);
+    res.json({
+      members, surveys, spaces,
+      memberDaily: memberDaily.map(({ _id, count }) => ({ date: _id, count })),
+      surveyDaily: surveyDaily.map(({ _id, count }) => ({ date: _id, count })),
+      generatedAt: new Date(),
+    });
+  } catch (error) {
+    console.error("Admin overview failed:", error.message);
+    res.status(500).json({ error: "We couldn't load the admin overview right now." });
+  }
+});
+
+function pageParameters(query) {
+  const limit = Math.min(100, Math.max(1, Number.parseInt(query.limit, 10) || 50));
+  const offset = Math.max(0, Number.parseInt(query.offset, 10) || 0);
+  return { limit, offset };
+}
+
+function escapedRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+app.get("/api/admin/members", async (req, res) => {
+  if (!requireAdmin(req, res) || !requireDb(res)) return;
+  const { limit, offset } = pageParameters(req.query);
+  const search = cleanText(req.query.search, 120);
+  const filter = search ? { $or: [
+    { name: { $regex: escapedRegex(search), $options: "i" } },
+    { email: { $regex: escapedRegex(search), $options: "i" } },
+  ] } : {};
+  try {
+    const collection = db.collection(collectionNames.members);
+    const [docs, count] = await Promise.all([
+      collection.find(filter, { projection: { name: 1, email: 1, createdAt: 1 } }).sort({ createdAt: -1, _id: -1 }).skip(offset).limit(limit).toArray(),
+      collection.countDocuments(filter),
+    ]);
+    res.json({ count, offset, limit, members: docs.map((doc) => ({ id: doc._id.toString(), name: doc.name || "", email: doc.email || "", createdAt: doc.createdAt || null })) });
+  } catch (error) {
+    console.error("Admin member list failed:", error.message);
+    res.status(500).json({ error: "We couldn't load sign-ups right now." });
+  }
+});
+
 function validateSpace(body) {
   const space = {
     name: cleanText(body?.name, 120),
@@ -344,11 +461,19 @@ function validateSpace(body) {
 
 app.get("/api/admin/responses", async (req, res) => {
   if (!requireAdmin(req, res) || !requireDb(res)) return;
+  const { limit, offset } = pageParameters(req.query);
+  const search = cleanText(req.query.search, 120);
+  const searchRegex = search ? new RegExp(escapedRegex(search), "i") : null;
+  const filter = search ? { $or: [
+    { "respondent.firstName": searchRegex },
+    { "respondent.lastName": searchRegex },
+    { "respondent.thirdSpace": searchRegex },
+  ] } : {};
   try {
     const [questions, docs, count] = await Promise.all([
       db.collection(collectionNames.questions).find({}).toArray(),
-      db.collection(collectionNames.surveys).find({}).sort({ createdAt: -1 }).limit(500).toArray(),
-      db.collection(collectionNames.surveys).countDocuments(),
+      db.collection(collectionNames.surveys).find(filter).sort({ createdAt: -1, _id: -1 }).skip(offset).limit(limit).toArray(),
+      db.collection(collectionNames.surveys).countDocuments(filter),
     ]);
     const labels = new Map(defaultQuestions.map(({ id, text }) => [id, text]));
     for (const question of questions) labels.set(question.id, question.text);
@@ -361,7 +486,7 @@ app.get("/api/admin/responses", async (req, res) => {
         answer,
       })).filter((entry) => entry.answer),
     }));
-    res.json({ count, responses });
+    res.json({ count, offset, limit, responses });
   } catch (error) {
     console.error("Admin response list failed:", error.message);
     res.status(500).json({ error: "We couldn't load responses right now." });

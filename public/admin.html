@@ -32,37 +32,86 @@
     </section>
 
     <div id="admin-workspace" hidden>
-      <p><button id="logout-button" type="button">Sign out</button></p>
+      <div class="admin-workspace-bar">
+        <nav class="admin-workspace-nav" aria-label="Admin sections">
+          <a href="#overview-section">Overview</a><a href="#members-section">Sign-ups</a><a href="#responses-section">Survey responses</a><a href="#locations-section">Third spaces</a><a href="#question-section">Questions</a>
+        </nav>
+        <button id="logout-button" type="button" class="admin-button-secondary">Sign out</button>
+      </div>
 
-      <section id="responses-section">
-        <h2>Survey responses</h2>
-        <p id="response-total"></p>
-        <div id="response-list"></div>
+      <section id="overview-section" class="admin-dashboard-section">
+        <div class="admin-section-heading"><div><span class="admin-eyebrow">Community snapshot</span><h2>Overview</h2><p>A quick view of sign-ups and survey activity.</p></div>
+          <label class="admin-range-control" for="chart-range">Chart range<select id="chart-range"><option value="30">Last 30 days</option><option value="90">Last 90 days</option><option value="365" selected>Last 12 months</option><option value="all">All time</option></select></label>
+        </div>
+        <div class="admin-metric-grid" aria-live="polite">
+          <article class="admin-metric-card"><span>People signed up</span><strong id="member-total">—</strong><small>Community members</small></article>
+          <article class="admin-metric-card"><span>Survey responses</span><strong id="survey-total">—</strong><small>Voices shared</small></article>
+          <article class="admin-metric-card"><span>Third spaces</span><strong id="space-total">—</strong><small>On the map</small></article>
+        </div>
+        <div class="admin-chart-grid">
+          <figure class="admin-chart-card"><figcaption><span>Sign-ups over time</span><strong id="member-chart-total"></strong></figcaption><div id="member-chart" class="admin-chart" role="img" aria-label="Member sign-ups over time"></div></figure>
+          <figure class="admin-chart-card"><figcaption><span>Surveys over time</span><strong id="survey-chart-total"></strong></figcaption><div id="survey-chart" class="admin-chart" role="img" aria-label="Survey responses over time"></div></figure>
+        </div>
+        <p class="admin-updated-at" id="overview-updated"></p>
       </section>
 
-      <section id="question-section">
-        <h2>Edit survey questions</h2>
-        <p>Change wording, reorder, add, or remove questions. Past responses keep their original question text where available.</p>
+      <section id="members-section" class="admin-dashboard-section">
+        <div class="admin-section-heading"><div><span class="admin-eyebrow">Community</span><h2>Sign-ups</h2><p>Browse everyone who has joined the collective.</p></div><strong class="admin-section-count" id="members-count"></strong></div>
+        <form id="member-search-form" class="admin-search-form"><label for="member-search">Search by name or email</label><input id="member-search" type="search" maxlength="120" placeholder="Type a name or email"><button type="submit">Search</button><button type="button" id="clear-member-search" class="admin-button-secondary">Clear</button></form>
+        <div id="member-list" class="admin-record-list" aria-live="polite"></div>
+        <div class="admin-pagination"><button id="members-previous" type="button" class="admin-button-secondary">Previous</button><span id="members-page"></span><button id="members-next" type="button" class="admin-button-secondary">Next</button></div>
+      </section>
+
+      <section id="responses-section" class="admin-dashboard-section">
+        <div class="admin-section-heading"><div><span class="admin-eyebrow">What young people said</span><h2>Survey responses</h2><p>Open any response to read that person’s answers.</p></div><strong class="admin-section-count" id="response-total"></strong></div>
+        <form id="response-search-form" class="admin-search-form"><label for="response-search">Search respondents or third spaces</label><input id="response-search" type="search" maxlength="120" placeholder="Name or third space"><button type="submit">Search</button><button type="button" id="clear-response-search" class="admin-button-secondary">Clear</button></form>
+        <div id="response-list" class="admin-record-list" aria-live="polite"></div>
+        <div class="admin-pagination"><button id="responses-previous" type="button" class="admin-button-secondary">Previous</button><span id="responses-page"></span><button id="responses-next" type="button" class="admin-button-secondary">Next</button></div>
+      </section>
+
+      <section id="locations-section" class="admin-dashboard-section">
+        <div class="admin-section-heading"><div><span class="admin-eyebrow">Explore the city</span><h2>Third spaces</h2><p>Add a place or choose one location to update its details.</p></div><strong class="admin-section-count" id="space-count"></strong></div>
+        <div class="admin-space-layout">
+          <div class="admin-subcard"><h3>Add a third space</h3>
+            <form id="location-form">
+              <label for="location-name">Place name<input id="location-name" name="name" maxlength="120" required></label>
+              <label for="location-address">Street address or area<input id="location-address" name="address" maxlength="240" placeholder="e.g. 47 St George’s Mall, Cape Town" required></label>
+              <div class="admin-geocode-row"><button type="button" id="find-location">Find on map</button><span id="geocode-message" role="status">Enter the address and find its map location.</span></div>
+              <label id="geocode-match-label" for="geocode-match" hidden>Choose the matching address<select id="geocode-match"></select></label>
+              <label for="location-description">Description shown on the space card<textarea id="location-description" name="description" maxlength="500" rows="3" placeholder="Leave blank to use the default description: Meet people, work on ideas, and try something new."></textarea></label>
+              <label for="location-cost">Cost information<input id="location-cost" name="cost" maxlength="120" placeholder="e.g. Free"></label>
+              <label for="location-website">Website or social link<input id="location-website" name="website" type="url" maxlength="500" placeholder="https://"></label>
+              <details class="admin-coordinate-details"><summary>Adjust coordinates manually (optional)</summary><div class="admin-coordinate-grid">
+                <label for="location-latitude">Latitude<input id="location-latitude" name="latitude" type="number" step="any" min="-90" max="90"></label>
+                <label for="location-longitude">Longitude<input id="location-longitude" name="longitude" type="number" step="any" min="-180" max="180"></label>
+              </div></details>
+              <button type="submit">Add third space</button>
+            </form>
+            <p id="location-message" class="admin-status-message" role="status"></p>
+            <small class="admin-attribution">Address lookup by <a href="https://www.openstreetmap.org/" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>.</small>
+          </div>
+          <div class="admin-subcard admin-space-editor"><h3>Edit a third space</h3>
+            <label for="space-select">Choose a space<select id="space-select"><option value="">Loading third spaces…</option></select></label>
+            <div id="space-editor-empty" class="admin-empty-state">Choose a third space to edit its details.</div>
+            <form id="space-edit-form" hidden>
+              <label for="edit-space-name">Place name<input id="edit-space-name" name="name" maxlength="120" required></label>
+              <label for="edit-space-address">Address or area<input id="edit-space-address" name="address" maxlength="240" required></label>
+              <label for="edit-space-description">Description shown on the space card<textarea id="edit-space-description" name="description" maxlength="500" rows="4" placeholder="Meet people, work on ideas, and try something new."></textarea></label>
+              <label for="edit-space-cost">Cost information<input id="edit-space-cost" name="cost" maxlength="120"></label>
+              <label for="edit-space-website">Website or social link<input id="edit-space-website" name="website" type="url" maxlength="500"></label>
+              <div class="admin-coordinate-grid"><label for="edit-space-latitude">Latitude<input id="edit-space-latitude" name="latitude" type="number" step="any" min="-90" max="90" required></label><label for="edit-space-longitude">Longitude<input id="edit-space-longitude" name="longitude" type="number" step="any" min="-180" max="180" required></label></div>
+              <div class="admin-space-actions"><button type="submit">Save changes</button><button type="button" id="delete-space" class="admin-button-danger">Delete space</button></div>
+            </form>
+          </div>
+        </div>
+        <p id="space-edit-message" class="admin-status-message" role="status"></p>
+      </section>
+
+      <section id="question-section" class="admin-dashboard-section">
+        <div class="admin-section-heading"><div><span class="admin-eyebrow">Keep listening</span><h2>Survey questions</h2><p>Change wording, reorder, add, or remove active questions. Past responses keep their original question text where available.</p></div></div>
         <div id="question-list"></div>
-        <p><button id="add-question" type="button">Add a question</button> <button id="save-questions" type="button">Save questions</button></p>
-        <p id="question-message" role="status"></p>
-      </section>
-
-      <section id="locations-section">
-        <h2>Manage third spaces</h2>
-        <h3>Add a location</h3>
-        <form id="location-form">
-          <p><label for="location-name">Place name</label><br><input id="location-name" name="name" maxlength="120" required></p>
-          <p><label for="location-address">Address or area</label><br><input id="location-address" name="address" maxlength="240" required></p>
-          <p><label for="location-description">What can young people do there?</label><br><textarea id="location-description" name="description" maxlength="500" rows="3"></textarea></p>
-          <p><label for="location-cost">Cost information</label><br><input id="location-cost" name="cost" maxlength="120"></p>
-          <p><label for="location-latitude">Latitude</label><br><input id="location-latitude" name="latitude" type="number" step="any" min="-90" max="90" required></p>
-          <p><label for="location-longitude">Longitude</label><br><input id="location-longitude" name="longitude" type="number" step="any" min="-180" max="180" required></p>
-          <button type="submit">Add location</button>
-        </form>
-        <p id="location-message" role="status"></p>
-        <h3>Current locations</h3>
-        <div id="location-list"></div>
+        <div class="admin-action-row"><button id="add-question" type="button" class="admin-button-secondary">Add a question</button><button id="save-questions" type="button">Save questions</button></div>
+        <p id="question-message" class="admin-status-message" role="status"></p>
       </section>
     </div>
   </main>

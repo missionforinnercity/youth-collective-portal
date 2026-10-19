@@ -62,6 +62,86 @@ if (rotatingWord && !window.matchMedia("(prefers-reduced-motion: reduce)").match
 
 const heroArt = document.querySelector(".hero-art");
 const heroLogo = document.querySelector(".hero-logo-panel");
+const heroStars = heroArt?.querySelectorAll(".hero-star");
+if (heroArt && heroStars?.length && window.gsap) {
+  const gsap = window.gsap;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  heroStars.forEach((star, index) => {
+    const svg = star.querySelector("svg");
+    gsap.set(star, { x: 0, y: 0, rotation: 0, transformOrigin: "50% 50%", force3D: true });
+    const rotationTween = reduceMotion ? null : gsap.to(star, { rotation: 360, duration: [28, 21, 25][index], ease: "none", repeat: -1, transformOrigin: "50% 50%" });
+    if (svg && !reduceMotion) {
+      gsap.fromTo(svg, { y: -8 }, {
+        y: 10,
+        duration: 3.2 + index * 0.8,
+        delay: index * 0.35,
+        ease: "sine.inOut",
+        repeat: -1,
+        yoyo: true,
+      });
+    }
+    let drag;
+    star.addEventListener("pointerdown", (event) => {
+      if (event.button !== undefined && event.button !== 0) return;
+      event.preventDefault();
+      gsap.killTweensOf(star, "x,y");
+      rotationTween?.pause();
+      drag = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        x: Number(gsap.getProperty(star, "x")) || 0,
+        y: Number(gsap.getProperty(star, "y")) || 0,
+        lastX: event.clientX,
+        lastY: event.clientY,
+        lastTime: performance.now(),
+        velocityX: 0,
+        velocityY: 0,
+      };
+      star.classList.add("is-dragging");
+      star.setPointerCapture(event.pointerId);
+    });
+    star.addEventListener("pointermove", (event) => {
+      if (!drag || event.pointerId !== drag.pointerId) return;
+      const now = performance.now();
+      const elapsed = Math.max(1, now - drag.lastTime);
+      const deltaX = event.clientX - drag.startX;
+      const deltaY = event.clientY - drag.startY;
+      if (Math.hypot(deltaX, deltaY) > 4) star.classList.add("has-been-dragged");
+      const maxTravel = event.pointerType === "touch" ? 115 : 190;
+      const clamp = (value) => gsap.utils.clamp(-maxTravel, maxTravel, value);
+      gsap.set(star, {
+        x: clamp(drag.x + deltaX),
+        y: clamp(drag.y + deltaY),
+      });
+      drag.velocityX = (event.clientX - drag.lastX) / elapsed * 16;
+      drag.velocityY = (event.clientY - drag.lastY) / elapsed * 16;
+      drag.lastX = event.clientX;
+      drag.lastY = event.clientY;
+      drag.lastTime = now;
+    });
+    const releaseStar = (event) => {
+      if (!drag || event.pointerId !== drag.pointerId) return;
+      const { velocityX, velocityY } = drag;
+      drag = undefined;
+      star.classList.remove("is-dragging");
+      const maxTravel = event.pointerType === "touch" ? 115 : 190;
+      const clamp = (value) => gsap.utils.clamp(-maxTravel, maxTravel, value);
+      const currentX = Number(gsap.getProperty(star, "x")) || 0;
+      const currentY = Number(gsap.getProperty(star, "y")) || 0;
+      gsap.to(star, {
+        x: clamp(currentX + velocityX * 3),
+        y: clamp(currentY + velocityY * 3),
+        duration: reduceMotion ? 0 : 1.25,
+        ease: "power3.out",
+        overwrite: "auto",
+        onComplete: () => rotationTween?.resume(),
+      });
+    };
+    star.addEventListener("pointerup", releaseStar);
+    star.addEventListener("pointercancel", releaseStar);
+  });
+}
 if (heroArt && heroLogo) {
   const recentLogoClicks = [];
   const popShapes = ["✦", "✳", "●", "♥", "✦", "✧", "↗"];

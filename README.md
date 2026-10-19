@@ -20,6 +20,7 @@ The app uses `MONGODB_URI`, `MONGODB_USERNAME`, and `MONGODB_PASSWORD`. Keep `.e
 - `MONGODB_URI` may be a full `mongodb://` or `mongodb+srv://` URI, or an Atlas cluster hostname. If it has no username, the app uses `MONGODB_USERNAME` and `MONGODB_PASSWORD`.
 - MongoDB connection attempts retry with exponential backoff. The server pings the database every 30 seconds and `/api/health` performs a live ping.
 - Optional: `PORT` (defaults to `3000`), `MONGODB_DATABASE` (defaults to `youth_collective`), `CITY_NAME`, `CITY_LAT`, and `CITY_LNG` (defaults to Cape Town CBD).
+- Optional: `GEOCODING_SEARCH_URL` can point to a Nominatim-compatible `/search` endpoint for admin address lookup.
 
 The server uses the MongoDB collections `surveys`, `members`, `third_spaces`, and `survey_questions`. Their names can be changed with `MONGODB_SURVEYS_COLLECTION`, `MONGODB_MEMBERS_COLLECTION`, `MONGODB_SPACES_COLLECTION`, and `MONGODB_QUESTIONS_COLLECTION`.
 
@@ -27,7 +28,7 @@ The server uses the MongoDB collections `surveys`, `members`, `third_spaces`, an
 
 Set `ADMIN_PASSWORD` to a unique password of at least 12 characters, then sign in at `/admin.html`. The signed login cookie expires after eight hours. Set `NODE_ENV=production` and serve the site over HTTPS in production so the cookie is marked Secure.
 
-The portal shows the latest 500 survey responses, lets an administrator reorder, edit, add, or remove active questions, and add, edit, or delete map locations. Removed questions are archived so their previous responses stay in the database. Survey responses include the respondent's name, surname, and selected third space.
+The portal includes signup and survey activity charts, searchable paginated member and response lists, expandable survey answers, and survey-question editing. Administrators can add spaces from an address lookup or enter coordinates manually, then select a space from a dropdown to edit or remove it. Address lookup uses OpenStreetMap Nominatim by default; searches are user-triggered, cached in the running server, and rate-limited. Removed questions are archived so their previous responses stay in the database. Survey responses include the respondent's name, surname, and selected third space.
 
 ## Features
 
