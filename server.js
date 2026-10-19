@@ -7,6 +7,8 @@ const path = require("path");
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
+let adminSessionSecret = crypto.randomBytes(32);
+const maximumFailedLoginEntries = 10000;
 const databaseName = process.env.MONGODB_DATABASE || "youth_collective";
 const collectionNames = {
   surveys: process.env.MONGODB_SURVEYS_COLLECTION || "surveys",
@@ -23,6 +25,27 @@ const defaultQuestions = [
 ].map((text, index) => ({ id: `q${index + 1}`, text }));
 
 app.disable("x-powered-by");
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  if (process.env.NODE_ENV === "production") res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  res.setHeader("Content-Security-Policy", [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "form-action 'self'",
+    "script-src 'self' https://unpkg.com https://cdn.jsdelivr.net",
+    "style-src 'self' 'unsafe-inline' https://unpkg.com",
+    "img-src 'self' data: blob: https://*.tile.openstreetmap.org https://unpkg.com",
+    "font-src 'self' data:",
+    "connect-src 'self' https://*.tile.openstreetmap.org",
+  ].join("; "));
+  if (req.path.startsWith("/api/")) res.setHeader("Cache-Control", "no-store");
+  next();
+});
 app.use(express.json({ limit: "32kb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -163,12 +186,13 @@ function monitorMongoConnection() {
 }
 
 function sessionToken(expiresAt) {
-  const signature = crypto.createHmac("sha256", process.env.ADMIN_PASSWORD).update(`youth-collective-admin:${expiresAt}`).digest("base64url");
+  const signature = crypto.createHmac("sha256", adminSessionSecret).update(`youth-collective-admin:${expiresAt}`).digest("base64url");
   return `${expiresAt}.${signature}`;
 }
 
 function isAdmin(req) {
-  const token = (req.headers.cookie || "").split(";").map((item) => item.trim()).find((item) => item.startsWith("yc_admin="))?.slice("yc_admin=".length);
+  const cookieName = process.env.NODE_ENV === "production" ? "__Host-yc_admin" : "yc_admin";
+  const token = (req.headers.cookie || "").split(";").map((item) => item.trim()).find((item) => item.startsWith(`${cookieName}=`))?.slice(cookieName.length + 1);
   const [expiryText, signature] = (token || "").split(".");
   const expiry = Number(expiryText);
   if (!Number.isFinite(expiry) || expiry < Date.now() || !signature || !process.env.ADMIN_PASSWORD || process.env.ADMIN_PASSWORD.length < 12) return false;
@@ -201,7 +225,25 @@ async function getActiveQuestions() {
 
 function adminCookie(token, maxAge) {
   const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
-  return `yc_admin=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${maxAge}${secure}`;
+  const name = process.env.NODE_ENV === "production" ? "__Host-yc_admin" : "yc_admin";
+  return `${name}=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${maxAge}${secure}`;
+}
+
+function recordFailedAdminLogin(address) {
+  const now = Date.now();
+  if (!failedAdminLogins.has(address) && failedAdminLogins.size >= maximumFailedLoginEntries) {
+    for (const [key, value] of failedAdminLogins) {
+      if (value.resetAt <= now) failedAdminLogins.delete(key);
+      else break;
+    }
+  }
+  if (!failedAdminLogins.has(address) && failedAdminLogins.size >= maximumFailedLoginEntries) {
+    failedAdminLogins.delete(failedAdminLogins.keys().next().value);
+  }
+  const previous = failedAdminLogins.get(address);
+  const count = previous?.resetAt > now ? previous.count + 1 : 1;
+  failedAdminLogins.set(address, { count, resetAt: now + 15 * 60_000 });
+  return count;
 }
 
 function getGeocodeMatches(address) {
@@ -268,8 +310,7 @@ app.post("/api/admin/login", (req, res) => {
   const providedHash = crypto.createHash("sha256").update(provided).digest();
   const expectedHash = crypto.createHash("sha256").update(password).digest();
   if (!crypto.timingSafeEqual(providedHash, expectedHash)) {
-    const count = attempt?.resetAt > Date.now() ? attempt.count + 1 : 1;
-    failedAdminLogins.set(address, { count, resetAt: Date.now() + 15 * 60_000 });
+    recordFailedAdminLogin(address);
     return res.status(401).json({ error: "That password did not match." });
   }
   failedAdminLogins.delete(address);
@@ -279,6 +320,7 @@ app.post("/api/admin/login", (req, res) => {
 });
 
 app.post("/api/admin/logout", (_req, res) => {
+  if (isAdmin(_req)) adminSessionSecret = crypto.randomBytes(32);
   res.setHeader("Set-Cookie", adminCookie("", 0));
   res.json({ authenticated: false });
 });

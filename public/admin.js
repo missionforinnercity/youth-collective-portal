@@ -420,6 +420,6 @@ document.querySelector("#save-questions").addEventListener("click", async () => 
 });
 
 api("/api/admin/status").then((status) => {
-  if (!status.enabled) document.querySelector("#login-help").textContent = "Admin sign-in is disabled until ADMIN_PASSWORD is set in .env (at least 12 characters).";
+  if (!status.enabled) document.querySelector("#login-help").textContent = "Admin sign-in is disabled until ADMIN_PASSWORD is set in .env (at least 12 characters). Use a unique passphrase of 16 or more characters.";
   if (status.authenticated) showWorkspace();
 }).catch((error) => { loginMessage.textContent = error.message; });

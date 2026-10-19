@@ -26,7 +26,7 @@ The server uses the MongoDB collections `surveys`, `members`, `third_spaces`, an
 
 ## Admin portal
 
-Set `ADMIN_PASSWORD` to a unique password of at least 12 characters, then sign in at `/admin.html`. The signed login cookie expires after eight hours. Set `NODE_ENV=production` and serve the site over HTTPS in production so the cookie is marked Secure.
+Set `ADMIN_PASSWORD` to a unique passphrase of at least 16 characters, then sign in at `/admin.html` (the app disables admin access below 12 characters). The HttpOnly, SameSite=Strict signed login cookie expires after eight hours and is invalidated when the server restarts. Set `NODE_ENV=production` and serve the site over HTTPS in production; this enables the Secure `__Host-` cookie and HSTS. API responses are marked no-store, and the server sends browser security policy headers.
 
 The portal includes signup and survey activity charts, searchable paginated member and response lists, expandable survey answers, and survey-question editing. Administrators can add spaces from an address lookup or enter coordinates manually, then select a space from a dropdown to edit or remove it. Address lookup uses OpenStreetMap Nominatim by default; searches are user-triggered, cached in the running server, and rate-limited. Removed questions are archived so their previous responses stay in the database. Survey responses include the respondent's name, surname, and selected third space.
 
