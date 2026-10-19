@@ -7,7 +7,20 @@ const path = require("path");
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
-let adminSessionSecret = crypto.randomBytes(32);
+function createAdminSessionSecret() {
+  const configuredSecret = (process.env.ADMIN_SESSION_SECRET || "").trim();
+  if (configuredSecret) {
+    if (Buffer.byteLength(configuredSecret, "utf8") < 32) {
+      throw new Error("ADMIN_SESSION_SECRET must be at least 32 characters.");
+    }
+    return crypto.createHash("sha256").update(configuredSecret).digest();
+  }
+
+  // Stable across serverless instances and restarts. Configure ADMIN_SESSION_SECRET
+  // for stronger session signing independent of the administrator password.
+  return crypto.scryptSync(process.env.ADMIN_PASSWORD || "", "youth-collective-admin-session-v1", 32);
+}
+const adminSessionSecret = createAdminSessionSecret();
 const maximumFailedLoginEntries = 10000;
 const databaseName = process.env.MONGODB_DATABASE || "youth_collective";
 const collectionNames = {
@@ -320,7 +333,6 @@ app.post("/api/admin/login", (req, res) => {
 });
 
 app.post("/api/admin/logout", (_req, res) => {
-  if (isAdmin(_req)) adminSessionSecret = crypto.randomBytes(32);
   res.setHeader("Set-Cookie", adminCookie("", 0));
   res.json({ authenticated: false });
 });
