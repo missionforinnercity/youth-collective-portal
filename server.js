@@ -4,9 +4,12 @@ const express = require("express");
 const { MongoClient } = require("mongodb");
 const crypto = require("crypto");
 const path = require("path");
+const { isConfigured: isMailchimpConfigured, syncSignupToMailchimp } = require("./mailchimp");
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
+const trustedProxyHops = Number(process.env.TRUST_PROXY_HOPS || 0);
+if (Number.isInteger(trustedProxyHops) && trustedProxyHops > 0) app.set("trust proxy", trustedProxyHops);
 function createAdminSessionSecret() {
   const configuredSecret = (process.env.ADMIN_SESSION_SECRET || "").trim();
   if (configuredSecret) {
@@ -63,14 +66,18 @@ app.use(express.json({ limit: "32kb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
 let db;
+let memberEmailIndexReady = false;
 let mongoClient;
 let mongoConnecting;
 let mongoHealthCheck;
 let mongoReconnectTimer;
 let mongoHealthTimer;
+let mailchimpRetryTimer;
+let mailchimpRetryRunning = false;
 let mongoRetryDelay = 1000;
 let shuttingDown = false;
 const failedAdminLogins = new Map();
+const signupAttempts = new Map();
 const geocodeCache = new Map();
 const geocodeInFlight = new Map();
 let geocodeQueue = Promise.resolve();
@@ -141,6 +148,16 @@ function connectMongo() {
       await client.connect();
       const connectedDb = client.db(databaseName);
       await connectedDb.command({ ping: 1 });
+      try {
+        await connectedDb.collection(collectionNames.members).createIndex(
+          { email: 1 },
+          { unique: true, partialFilterExpression: { email: { $type: "string" } } },
+        );
+        memberEmailIndexReady = true;
+      } catch (indexError) {
+        memberEmailIndexReady = false;
+        console.error("Member email index setup failed:", indexError.name, indexError.code || "");
+      }
       if (shuttingDown) {
         await client.close();
         return;
@@ -184,6 +201,7 @@ async function verifyMongoConnection() {
       const staleClient = mongoClient;
       mongoClient = null;
       db = null;
+      memberEmailIndexReady = false;
       if (staleClient) await staleClient.close().catch(() => {});
       scheduleMongoReconnect();
       return false;
@@ -257,6 +275,19 @@ function recordFailedAdminLogin(address) {
   const count = previous?.resetAt > now ? previous.count + 1 : 1;
   failedAdminLogins.set(address, { count, resetAt: now + 15 * 60_000 });
   return count;
+}
+
+function signupRateLimit(address) {
+  const now = Date.now();
+  const previous = signupAttempts.get(address);
+  const attempt = previous?.resetAt > now ? previous : { count: 0, resetAt: now + 15 * 60_000 };
+  if (!previous || previous.resetAt <= now) {
+    if (signupAttempts.size >= 10000) signupAttempts.delete(signupAttempts.keys().next().value);
+  }
+  signupAttempts.delete(address);
+  signupAttempts.set(address, attempt);
+  attempt.count += 1;
+  return attempt.count > 60 ? Math.ceil((attempt.resetAt - now) / 1000) : 0;
 }
 
 function getGeocodeMatches(address) {
@@ -409,20 +440,103 @@ app.post("/api/surveys", async (req, res) => {
 
 app.post("/api/members", async (req, res) => {
   if (!requireDb(res)) return;
+  if (!memberEmailIndexReady) return res.status(503).json({ error: "Sign-ups are temporarily unavailable. Please try again shortly." });
+  if (!isMailchimpConfigured()) return res.status(503).json({ error: "Sign-ups are temporarily unavailable. Please try again shortly." });
   const name = cleanText(req.body?.name, 120);
   const email = cleanText(req.body?.email, 254).toLowerCase();
   if (!name) return res.status(400).json({ error: "Enter your name." });
   if (!/^\S+@\S+\.\S+$/.test(email)) return res.status(400).json({ error: "Enter a valid email address." });
-  if (req.body?.consent !== true) return res.status(400).json({ error: "Please agree to be contacted by the Inner City Youth Collective." });
+  if (req.body?.consent !== true) return res.status(400).json({ error: "Please agree to receive emails from the Inner City Youth Collective." });
+  const retryAfter = signupRateLimit(req.ip || req.socket.remoteAddress || "unknown");
+  if (retryAfter) {
+    res.setHeader("Retry-After", retryAfter);
+    return res.status(429).json({ error: "Too many sign-ups from this connection. Please try again later." });
+  }
 
   try {
-    await db.collection(collectionNames.members).insertOne({ name, email, createdAt: new Date() });
-    res.status(201).json({ message: "You're on the list. The Inner City Youth Collective will be in touch!" });
+    const collection = db.collection(collectionNames.members);
+    const now = new Date();
+    const member = {
+      name, email, createdAt: now, consentedAt: now,
+      mailchimpSyncStatus: "pending", mailchimpRetryAt: now,
+    };
+    let result;
+    try {
+      result = await collection.updateOne({ email }, { $setOnInsert: member }, { upsert: true });
+    } catch (error) {
+      if (error.code !== 11000) throw error;
+    }
+    let memberToSync = result?.upsertedId ? { ...member, _id: result.upsertedId } : null;
+    if (!memberToSync) {
+      // A legacy signup can opt in under the current form without duplicating their record.
+      memberToSync = await collection.findOneAndUpdate(
+        { email, mailchimpSyncStatus: { $exists: false } },
+        { $set: { name, consentedAt: now, mailchimpSyncStatus: "pending", mailchimpRetryAt: now } },
+        { returnDocument: "after" },
+      );
+    }
+    if (memberToSync) await syncMemberToMailchimp(memberToSync);
+    res.status(result?.upsertedId ? 201 : 200).json({ message: "You're on the list. The Inner City Youth Collective will be in touch!" });
   } catch (error) {
-    console.error("Member signup save failed:", error.message);
+    console.error("Member signup save failed:", error.name, error.code || "");
     res.status(500).json({ error: "We couldn't save your sign-up right now." });
   }
 });
+
+async function syncMemberToMailchimp(member) {
+  let status;
+  try {
+    status = await syncSignupToMailchimp(member.email, member.name);
+  } catch (error) {
+    console.error("Mailchimp audience sync failed:", error.message);
+    const attempts = (member.mailchimpAttempts || 0) + 1;
+    const retryDelay = Math.min(60 * 60 * 1000, 60 * 1000 * 2 ** Math.min(attempts - 1, 6));
+    try {
+      await db.collection(collectionNames.members).updateOne(
+        { _id: member._id, mailchimpSyncStatus: "pending" },
+        { $set: { mailchimpAttempts: attempts, mailchimpRetryAt: new Date(Date.now() + retryDelay), mailchimpLastFailureAt: new Date() } },
+      );
+    } catch (saveError) {
+      console.error("Mailchimp retry state save failed:", saveError.message);
+    }
+    return "pending";
+  }
+  try {
+    await db.collection(collectionNames.members).updateOne(
+      { _id: member._id },
+      {
+        $set: { mailchimpSyncStatus: status === "subscribed" ? "synced" : "not_subscribed", mailchimpSyncedAt: new Date() },
+        $unset: { mailchimpRetryAt: "", mailchimpLastFailureAt: "" },
+      },
+    );
+  } catch (error) {
+    // The contact may already be in Mailchimp; an idempotent retry will repair local state.
+    console.error("Mailchimp sync state save failed:", error.message);
+    return "pending";
+  }
+  return status;
+}
+
+async function retryMailchimpSignups() {
+  if (mailchimpRetryRunning || !db || !isMailchimpConfigured() || shuttingDown) return;
+  mailchimpRetryRunning = true;
+  try {
+    const collection = db.collection(collectionNames.members);
+    for (let i = 0; i < 20 && !shuttingDown; i += 1) {
+      const member = await collection.findOneAndUpdate(
+        { mailchimpSyncStatus: "pending", mailchimpRetryAt: { $lte: new Date() } },
+        { $set: { mailchimpRetryAt: new Date(Date.now() + 2 * 60_000) } },
+        { sort: { mailchimpRetryAt: 1 }, returnDocument: "after" },
+      );
+      if (!member) break;
+      await syncMemberToMailchimp(member);
+    }
+  } catch (error) {
+    console.error("Mailchimp retry check failed:", error.message);
+  } finally {
+    mailchimpRetryRunning = false;
+  }
+}
 
 app.get("/api/spaces", async (_req, res) => {
   if (!requireDb(res)) return;
@@ -621,6 +735,7 @@ function start() {
   app.listen(port, () => {
     console.log(`Inner City Youth Collective portal running at http://localhost:${port}`);
     monitorMongoConnection();
+    mailchimpRetryTimer = setInterval(() => { void retryMailchimpSignups(); }, 60000);
     void connectMongo();
   });
 }
@@ -632,6 +747,7 @@ for (const signal of ["SIGINT", "SIGTERM"]) {
     shuttingDown = true;
     if (mongoReconnectTimer) clearTimeout(mongoReconnectTimer);
     if (mongoHealthTimer) clearInterval(mongoHealthTimer);
+    if (mailchimpRetryTimer) clearInterval(mailchimpRetryTimer);
     if (mongoClient) await mongoClient.close();
     process.exit(0);
   });

@@ -21,6 +21,11 @@ The app uses `MONGODB_URI`, `MONGODB_USERNAME`, and `MONGODB_PASSWORD`. Keep `.e
 - MongoDB connection attempts retry with exponential backoff. The server pings the database every 30 seconds and `/api/health` performs a live ping.
 - Optional: `PORT` (defaults to `3000`), `MONGODB_DATABASE` (defaults to `youth_collective`), `CITY_NAME`, `CITY_LAT`, and `CITY_LNG` (defaults to Cape Town CBD).
 - Optional: `GEOCODING_SEARCH_URL` can point to a Nominatim-compatible `/search` endpoint for admin address lookup.
+- To add new sign-ups to Mailchimp, set `MailChimpAPI` (or `MAILCHIMP_API_KEY`) and `MAILCHIMP_AUDIENCE_ID` in `.env` and in your deployment environment. This project's audience is `Mission for Inner City` (`f16de760ab`). Keep the API key server-side.
+- Optional: `MAILCHIMP_SIGNUP_TAG` changes the tag applied to subscribed contacts. It defaults to `Youth Collective Website Signup`.
+- Optional: `TRUST_PROXY_HOPS` should be set to the exact number of trusted reverse proxies in front of Node if the site is deployed behind one. Leave it unset for a direct connection.
+
+New consenting sign-ups are saved once per email address in MongoDB, added to that Mailchimp audience as subscribed contacts, and labeled with the `Youth Collective Website Signup` tag by default. Existing unsubscribed or cleaned contacts keep their Mailchimp status and are not tagged. Tag updates use Mailchimp's sync flag so tag-based automations do not fire. Failed Mailchimp syncs are retried in the background; `mailchimpSyncStatus` on each new member records the result. The server requires a unique email index and limits signup attempts to 60 per IP address per 15 minutes. The integration does not send a message or start an automation. It requires a single opt-in audience so it never sends a confirmation email; if that setting changes, sync will pause and retry until the audience is configured appropriately. Check Mailchimp's own signup-triggered automations separately if you want to ensure that subscribing a contact cannot trigger an email there.
 
 The server uses the MongoDB collections `surveys`, `members`, `third_spaces`, and `survey_questions`. Their names can be changed with `MONGODB_SURVEYS_COLLECTION`, `MONGODB_MEMBERS_COLLECTION`, `MONGODB_SPACES_COLLECTION`, and `MONGODB_QUESTIONS_COLLECTION`.
 

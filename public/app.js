@@ -511,7 +511,7 @@ if (memberForm) {
     clearMemberError();
     if (!nameField.value.trim()) return showMemberError("Pop your name in so we know who to say hello to.", nameField);
     if (!emailField.checkValidity()) return showMemberError("That email address doesn’t look quite right. Try checking it for a typo.", emailField);
-    if (!consentField.checked) return showMemberError("Please let us know it’s okay to contact you before joining.", consentField);
+    if (!consentField.checked) return showMemberError("Please agree to receive emails before joining.", consentField);
 
     submitButton.disabled = true;
     submitButton.setAttribute("aria-busy", "true");
