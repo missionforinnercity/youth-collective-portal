@@ -388,10 +388,10 @@ if (surveyForm) {
     try {
       let spaces = [];
       try { spaces = await request("/api/spaces"); } catch {}
+      const other = document.createElement("option"); other.value = "Somewhere else"; other.textContent = "Somewhere else"; spaceSelect.append(other);
       for (const space of spaces) {
         const option = document.createElement("option"); option.value = space.name; option.textContent = space.name; spaceSelect.append(option);
       }
-      const other = document.createElement("option"); other.value = "Somewhere else"; other.textContent = "Somewhere else"; spaceSelect.append(other);
       const questions = await request("/api/questions");
       introCard.querySelector(".card-count").textContent = `01 / ${String(questions.length + 1).padStart(2, "0")}`;
       const answers = Object.fromEntries(questions.map(({ id }) => [id, ""]));
