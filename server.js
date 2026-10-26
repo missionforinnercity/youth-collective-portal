@@ -408,8 +408,6 @@ app.get("/api/health", async (_req, res) => {
 app.post("/api/surveys", async (req, res) => {
   if (!requireDb(res)) return;
   const answers = req.body?.answers;
-  const consent = req.body?.consent === true;
-  if (!consent) return res.status(400).json({ error: "Please agree to share your answers with the Inner City Youth Collective." });
   const respondent = {
     firstName: cleanText(req.body?.firstName, 100),
     lastName: cleanText(req.body?.lastName, 100),

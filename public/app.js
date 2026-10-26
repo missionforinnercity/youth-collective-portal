@@ -463,7 +463,7 @@ if (surveyForm) {
         try {
           const result = await request("/api/surveys", {
             method: "POST",
-            body: JSON.stringify({ answers, consent: document.querySelector("#survey-consent").checked, thirdSpace: spaceSelect.value, firstName: document.querySelector("#survey-first-name").value, lastName: document.querySelector("#survey-last-name").value }),
+            body: JSON.stringify({ answers, thirdSpace: spaceSelect.value, firstName: document.querySelector("#survey-first-name").value, lastName: document.querySelector("#survey-last-name").value }),
           });
           introCard.hidden = true;
           surveyDeck.hidden = true;
