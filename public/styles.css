@@ -250,6 +250,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .member-error[hidden] { display: none; }
 .member-success { min-height: 345px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; }
 .member-success[hidden] { display: none; }
+.member-success .card-step::before { display: none; }
 .success-sparkle { width: 67px; height: 67px; display: grid; place-items: center; margin-bottom: 28px; border: 1px solid var(--purple); border-radius: 50%; background: var(--orange); font-size: 36px; animation: success-pop .55s cubic-bezier(.2,1.5,.4,1) both; }
 .member-success h2 { max-width: 600px; margin: 17px 0 11px; font: 400 clamp(39px, 6vw, 66px)/1 var(--display); letter-spacing: -.01em; }
 .member-success > p { max-width: 500px; margin: 8px 0 24px; font: 19px/1.45 var(--serif); }
