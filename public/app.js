@@ -395,6 +395,8 @@ if (surveyForm) {
       const questions = await request("/api/questions");
       introCard.querySelector(".card-count").textContent = `01 / ${String(questions.length + 1).padStart(2, "0")}`;
       const answers = Object.fromEntries(questions.map(({ id }) => [id, ""]));
+      const submissionId = crypto.randomUUID();
+      let submissionInFlight = false;
       let index = 0;
       const questionLabel = document.querySelector("#survey-question");
       const answerField = document.querySelector("#survey-answer");
@@ -458,19 +460,26 @@ if (surveyForm) {
       });
       surveyForm.addEventListener("submit", async (event) => {
         event.preventDefault();
+        if (submissionInFlight) return;
+        submissionInFlight = true;
+        submit.disabled = true;
         answers[questions[index].id] = answerField.value;
         message.textContent = "Sending…";
         try {
-          const result = await request("/api/surveys", {
+          await request("/api/surveys", {
             method: "POST",
-            body: JSON.stringify({ answers, thirdSpace: spaceSelect.value, firstName: document.querySelector("#survey-first-name").value, lastName: document.querySelector("#survey-last-name").value }),
+            body: JSON.stringify({ submissionId, answers, thirdSpace: spaceSelect.value, firstName: document.querySelector("#survey-first-name").value, lastName: document.querySelector("#survey-last-name").value }),
           });
           introCard.hidden = true;
           surveyDeck.hidden = true;
           success.hidden = false;
           message.textContent = "";
           success.focus();
-        } catch (error) { message.textContent = error.message; }
+        } catch (error) {
+          message.textContent = error.message;
+          submissionInFlight = false;
+          submit.disabled = false;
+        }
       });
     } catch (error) { message.textContent = error.message; }
   }

@@ -67,6 +67,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 let db;
 let memberEmailIndexReady = false;
+let surveySubmissionIndexReady = false;
 let mongoClient;
 let mongoConnecting;
 let mongoHealthCheck;
@@ -158,6 +159,16 @@ function connectMongo() {
         memberEmailIndexReady = false;
         console.error("Member email index setup failed:", indexError.name, indexError.code || "");
       }
+      try {
+        await connectedDb.collection(collectionNames.surveys).createIndex(
+          { submissionId: 1 },
+          { unique: true, partialFilterExpression: { submissionId: { $type: "string" } } },
+        );
+        surveySubmissionIndexReady = true;
+      } catch (indexError) {
+        surveySubmissionIndexReady = false;
+        console.error("Survey submission index setup failed:", indexError.name, indexError.code || "");
+      }
       if (shuttingDown) {
         await client.close();
         return;
@@ -202,6 +213,7 @@ async function verifyMongoConnection() {
       mongoClient = null;
       db = null;
       memberEmailIndexReady = false;
+      surveySubmissionIndexReady = false;
       if (staleClient) await staleClient.close().catch(() => {});
       scheduleMongoReconnect();
       return false;
@@ -407,6 +419,11 @@ app.get("/api/health", async (_req, res) => {
 
 app.post("/api/surveys", async (req, res) => {
   if (!requireDb(res)) return;
+  if (!surveySubmissionIndexReady) return res.status(503).json({ error: "The survey is temporarily unavailable. Please try again shortly." });
+  const submissionId = typeof req.body?.submissionId === "string" ? req.body.submissionId : "";
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(submissionId)) {
+    return res.status(400).json({ error: "This survey session has expired. Please refresh and try again." });
+  }
   const answers = req.body?.answers;
   const respondent = {
     firstName: cleanText(req.body?.firstName, 100),
@@ -423,12 +440,18 @@ app.post("/api/surveys", async (req, res) => {
     const questions = await getActiveQuestions();
     const sanitizedAnswers = Object.fromEntries(questions.map((question) => [question.id, cleanText(answers[question.id], 1000)]));
     if (!sanitizedAnswers[questions[0].id]) return res.status(400).json({ error: "Please answer the first question." });
-    await db.collection(collectionNames.surveys).insertOne({
-      respondent,
-      answers: sanitizedAnswers,
-      questionLabels: Object.fromEntries(questions.map(({ id, text }) => [id, text])),
-      createdAt: new Date(),
-    });
+    try {
+      await db.collection(collectionNames.surveys).insertOne({
+        submissionId,
+        respondent,
+        answers: sanitizedAnswers,
+        questionLabels: Object.fromEntries(questions.map(({ id, text }) => [id, text])),
+        createdAt: new Date(),
+      });
+    } catch (error) {
+      if (error.code !== 11000) throw error;
+      return res.status(200).json({ message: "Thanks for sharing your voice!" });
+    }
     res.status(201).json({ message: "Thanks for sharing your voice!" });
   } catch (error) {
     console.error("Survey save failed:", error.message);
